@@ -1,6 +1,10 @@
 from Bio import SeqIO
 from Bio.SeqRecord import SeqRecord
+import time
+import os
+
 from .utils import inter_path
+from parameters import Qscore_threshold, delete_intermediates
 
 def filtergen(file, threshold):  # generator function that returns edited reads that pass filter, to write new fastq file
     for record in SeqIO.parse(file, "fastq"):
@@ -12,19 +16,27 @@ def filtergen(file, threshold):  # generator function that returns edited reads 
                                description=record.description, letter_annotations=record.letter_annotations)
             yield newrec
 
-def process_files(input_filenames, filtered_path):
+def process_files(code, input_filenames, filtered_path):
+    print("Processing and quality filtering {} files...".format(len(input_filenames)))
+    start = time.perf_counter()
     total_records = 0
-    concat_path = inter_path('{}_CONCAT.fastq'.format(code))
-    with open(inter_path(concat_path), 'w') as outfile:
+    filtered_records = 0
+    concat_path = inter_path('{}_Q{}_CONCAT.fastq'.format(code, Qscore_threshold))
+    with open(inter_path(concat_path), 'w') as concat_outfile:
         for file in input_filenames:
             with open(file, 'r') as fastq_file:
                 for line in fastq_file:
-                    outfile.write(line)
+                    concat_outfile.write(line)
                     if line.startswith('@'):
                         total_records += 1
+        
+    with open(filtered_path, 'w+') as filtered_outfile:
+        filtered_records = SeqIO.write(filtergen(concat_path, Qscore_threshold), filtered_outfile, "fastq")
+    
+    if delete_intermediates:
+        os.remove(concat_path)
 
-        with open(filtered_path, 'w+') as outfile:
-            filtered_records = SeqIO.write(filtergen(concat_path, Qscore_threshold), outfile, "fastq")
-
-    os.remove(concat_path)
-    return (total_records, filtered_records)
+    elapsed = round(time.perf_counter() - start, 2)
+    percent_passing = round((total_records - filtered_records) / total_records, 2)
+    print("Read {} total records, {} filtered records ({}%) in {} seconds".format(total_records, filtered_records, percent_passing, elapsed))
+    return {'raw_record_count': total_records, 'filtered_record_count': filtered_records}
