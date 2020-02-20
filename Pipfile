@@ -7,10 +7,11 @@ verify_ssl = true
 
 [packages]
 biopython = "*"
-xlsxwriter = "*"
 matplotlib = "*"
 numpy = "*"
 pandas = "*"
+jupyter = "*"
+xlsxwriter = "*"
 
 [requires]
-python_version = "3.7"
+python_version = "3.8"
