@@ -47,12 +47,12 @@ def run_alignment(fingerprinted_path, run_prefix):
             os.remove(output_full_sam)
 
     print("Generating the histogram data...")
-    hist_results = make_histogram(output_no_mismatch_sam, run_prefix)
+    hist_results = correct_output_reads(output_no_mismatch_sam, run_prefix)
     elapsed_time = time.perf_counter() - start
     print("Finished doing genome mapping and generating histogram data in {} seconds".format(elapsed_time))
     return hist_results
 
-def make_histogram(sam_path, run_prefix):
+def correct_output_reads(sam_path, run_prefix):
     SAM_full = pd.read_csv(sam_path,sep="\t",usecols=[0,1,2,3,4,9,11,12,13,15,16,17],header=None)
     col_names = "read_number, flag_sum, ref_genome, ref_genome_coordinate, mapq, read_sequence, AS, XN, XM, XG, NM, MD".split(", ")
     SAM_full.columns = col_names
@@ -79,7 +79,7 @@ def make_histogram(sam_path, run_prefix):
     # Presumably because the old script was 1-indexing and bowtie is 0-indexing
     counts.index += 1
     
-    hist_path = output_path("{}_unique_reads_aligned_histogram.csv".format(run_prefix))
+    hist_path = output_path("{}_genome_read_locations.csv".format(run_prefix))
     counts.to_csv(hist_path)
     
     genome_length = len(SeqIO.read(Path(genome_path).resolve(), 'fasta').seq)

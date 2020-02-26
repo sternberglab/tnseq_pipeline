@@ -6,7 +6,7 @@
 delete_intermediates = False
 
 # Path to an info csv file with various information, see the example file for details
-info_file = "../Example/input.csv"
+info_file = "./inputs/experiment_info.csv"
 
 # 1. FOR LOADING NEW DATA
 
@@ -27,6 +27,7 @@ flank_sequence = "TGTTGGAACAACCAT"
 
 # The length of the fingerprint to match (set by restriction enzyme)
 fingerprint_length = 17
+
 
 # 3. FOR MAPPING
 
