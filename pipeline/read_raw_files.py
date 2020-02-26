@@ -2,9 +2,10 @@ from Bio import SeqIO
 from Bio.SeqRecord import SeqRecord
 import time
 import os
+from pathlib import Path
 
 from .utils import inter_path
-from parameters import Qscore_threshold, delete_intermediates
+from parameters import Qscore_threshold, delete_intermediates, raw_files_dir
 
 def filtergen(file, threshold):  # generator function that returns edited reads that pass filter, to write new fastq file
     for record in SeqIO.parse(file, "fastq"):
@@ -22,7 +23,7 @@ def process_files(code, input_filenames, filtered_path):
     total_records = 0
     filtered_records = 0
     concat_path = inter_path('{}_Q{}_CONCAT.fastq'.format(code, Qscore_threshold))
-    with open(inter_path(concat_path), 'w') as concat_outfile:
+    with open(concat_path, 'w') as concat_outfile:
         for file in input_filenames:
             with open(file, 'r') as fastq_file:
                 for line in fastq_file:
@@ -39,4 +40,12 @@ def process_files(code, input_filenames, filtered_path):
     elapsed = round(time.perf_counter() - start, 2)
     percent_passing = round((total_records - filtered_records) / total_records, 2)
     print("Read {} total records, {} filtered records ({}%) in {} seconds".format(total_records, filtered_records, percent_passing, elapsed))
-    return {'raw_record_count': total_records, 'filtered_record_count': filtered_records}
+    return {'Total Reads': total_records, 'Filtered Reads': filtered_records}
+
+def unzip_files():
+    zip_files = Path(raw_files_dir).glob('*.zip')
+    for zipped in zip_files:
+        with zipfile.ZipFile(zipped.resolve(), 'r') as zip_ref:
+            zip_ref.extractall(raw_files_dir)
+        if delete_intermediates:
+            os.remove(zipped)

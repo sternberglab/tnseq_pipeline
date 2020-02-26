@@ -5,11 +5,15 @@
 # but free up disk space
 delete_intermediates = False
 
+# Path to an info csv file with various information, see the example file for details
+info_file = "../Example/input.csv"
+
 # 1. FOR LOADING NEW DATA
 
-# The directory where your raw files are held (can be zip files)
+# The directory where your raw Illumina files are held 
+# Can be zip files or unzipped
 # This can be either relative or absolute path
-rawFilesDir = "../raw_files"
+raw_files_dir = "../raw_files"
 
 # The Qscore_threshold to use
 # This must be defined (use -1 if do not want to filter)
@@ -23,7 +27,6 @@ flank_sequence = "TGTTGGAACAACCAT"
 
 # The length of the fingerprint to match (set by restriction enzyme)
 fingerprint_length = 17
-
 
 # 3. FOR MAPPING
 

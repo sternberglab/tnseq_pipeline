@@ -9,12 +9,14 @@ import multiprocessing
 import shutil
 import numpy as np
 import subprocess
+import time
 
-from .utils import inter_path
+from .utils import inter_path, output_path
 from parameters import delete_intermediates, genome_path, fingerprint_length as map_length, transposon_site_duplication_length as TSD
 
 def run_alignment(fingerprinted_path, run_prefix):
     print("Running alignment mapping...")
+    start = time.perf_counter()
     output_no_mismatch_sam = inter_path("{}_bwt2_no_mismatches_full.sam".format(run_prefix))
     
     if not Path(output_no_mismatch_sam).exists():
@@ -46,6 +48,8 @@ def run_alignment(fingerprinted_path, run_prefix):
 
     print("Generating the histogram data...")
     hist_results = make_histogram(output_no_mismatch_sam, run_prefix)
+    elapsed_time = time.perf_counter() - start
+    print("Finished doing genome mapping and generating histogram data in {} seconds".format(elapsed_time))
     return hist_results
 
 def make_histogram(sam_path, run_prefix):
@@ -61,28 +65,24 @@ def make_histogram(sam_path, run_prefix):
     histogram = unique_reads[['read_number','flag_sum','ref_genome_coordinate','read_sequence']]
 
     corrected_coor = []
-    for i,j in zip(histogram.ref_genome_coordinate,histogram.flag_sum):
+    for i,j in zip(histogram.ref_genome_coordinate, histogram.flag_sum):
         if j == 0:
             corrected_coor.append(i + map_length)
         else:
             corrected_coor.append(i + TSD)
 
     histogram['corrected_coor'] = corrected_coor
-    counts = histogram.corrected_coor.value_counts()
 
-    histogram_count = []
+    counts = histogram.corrected_coor.value_counts().sort_index(0)
+    counts.index.name = 'position'
+    # Increment to make the counts all the exact same as original analysis
+    # Presumably because the old script was 1-indexing and bowtie is 0-indexing
+    counts.index += 1
+    
+    hist_path = output_path("{}_unique_reads_aligned_histogram.csv".format(run_prefix))
+    counts.to_csv(hist_path)
+    
     genome_length = len(SeqIO.read(Path(genome_path).resolve(), 'fasta').seq)
-    for i in range(genome_length):
-        if i in counts:
-            histogram_count.append(counts[i])
-        else:
-            histogram_count.append(0)
-
-    hist = pd.DataFrame(histogram_count,columns=['count'])
-    hist.index = range(1,len(hist)+1)
-    hist.index.name = 'position'
-    hist_path = inter_path("{}_unique_reads_aligned_histogram.csv".format(run_prefix))
-    hist.to_csv(hist_path)
 
     fasta_sequence = []
     for i,j,k in zip(histogram.read_number,histogram.read_sequence,histogram.flag_sum):
@@ -92,10 +92,11 @@ def make_histogram(sam_path, run_prefix):
             fasta_sequence.append(">%s"%(i) + "\n" + j)
 
     fasta_file = "\n".join(fasta_sequence)
-    fasta_path = inter_path("{}_unique_reads.fasta".format(run_prefix))
+    fasta_path = output_path("{}_unique_reads.fasta".format(run_prefix))
     with open(fasta_path, 'w', newline='') as file:
         file.write(fasta_file)
     return {
-        'unique_reads_count': len(unique_reads.read_number.unique()),
-        'non_unique_reads_count': len(non_unique_reads.read_number.unique())
+        'Genome Length': genome_length,
+        'Unique Genome-Mapping Reads': len(unique_reads.read_number.unique()),
+        'Non-Unique Genome-Mapping Reads': len(non_unique_reads.read_number.unique())
     }

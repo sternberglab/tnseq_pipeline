@@ -35,4 +35,4 @@ def fingerprinting(input_reads, fingerprinted_path):  # main command function fo
     print("{} reads had a valid fingerprint (ran in {} seconds)".format(fp_reads, elapsed))
     if delete_intermediates:
         os.remove(input_reads)
-    return {'fingerprint_read_count': fp_reads}
+    return {'Valid Fingerprint Reads': fp_reads}
