@@ -80,11 +80,12 @@ def plot_binned(filepath, run_information, yAxis_type):
     # 3. "zoomed" - a normalized graph that is zoomed in at the y-axis to show low-frequence bins
     code = run_information['Sample']
     qScore = run_information['Qscore Threshold']
-    genome_length = int(run_information['Genome Length'])
     desc = run_information['Information for graphs']
     psl = run_information['pCascade #']
     exp_date = run_information['Experiment date']
     spacer_location = int(run_information['End of protospacer'])
+
+    genome_length = len(SeqIO.read(Path(genome_path), 'fasta'))
 
     # determine which bin the spacer lies in
     spacer_bin = int(spacer_location/bin_size) + 0.5  
@@ -142,20 +143,14 @@ def plot_binned(filepath, run_information, yAxis_type):
     plt.close()  # closes the matplotlib preview popup window
 
 
-def make_genome_plots(csvFile):
+def make_genome_plots(csvFile, meta_info):
     start = time.perf_counter()
     print("Making genome mapping histograms...")
     # get code and q score from the filename, ex. "A4632_Q20_unique_reads.csv"
     code, qScore = Path(csvFile).stem.split('_')[:2]
     qScore = qScore[1:]
-    code_info = None
-    code_logs = None
-    # read in the info csv files
-    with open(Path(info_file), 'r', encoding='utf-8-sig') as info_csv:
-        reader = csv.DictReader(info_csv)
-        for row in reader:
-            if row['Sample'] == code:
-                code_info = row
+
+    code_info = meta_info
     code_logs = get_log_entry(code, qScore)
     run_information = {**code_logs, **code_info}
     print("Got the meta information about this run, creating the genome-mapping histograms...")

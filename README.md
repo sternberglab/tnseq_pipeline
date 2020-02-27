@@ -5,5 +5,3 @@ The intermediates should be safe to remove (and can be automatically deleted as 
 Windows requirements:
 perl, bowtie2 (2.3.4) and gawk in your path
 
-
-# in mapping, look first for reads (unique and duplicated), then look for donor or spike matches, then lastly for a CRISPR spacer array sequence from the input csv

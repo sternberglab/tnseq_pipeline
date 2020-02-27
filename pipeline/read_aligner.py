@@ -15,12 +15,18 @@ import time
 from .utils import inter_path, output_path
 from parameters import delete_intermediates, genome_path, fingerprint_length as map_length, transposon_site_duplication_length as TSD
 
-def run_alignment(fingerprinted_path, run_prefix):
+# Unique parameters for this file
+donor_fp = "TGCTGAAACCTCAGGCA"
+spike_fp = "ATGATTACGCCAAGCTT"
+
+
+def run_alignment(fingerprinted_path, run_prefix, meta_info):
     print("Running alignment mapping...")
     start = time.perf_counter()
     output_no_mismatch_sam = inter_path("{}_bwt2_no_mismatches_full.sam".format(run_prefix))
-    
-    if not Path(output_no_mismatch_sam).exists():
+    output_mismatch_sam = inter_path("{}_bwt2_mismatches_full.sam".format(run_prefix))
+
+    if not Path(output_no_mismatch_sam).exists() or True:
         print("Finding genome alignments...")
         genome_file = Path(genome_path)
         # First have bowtie build and index the genome if it hasn't yet
@@ -35,31 +41,35 @@ def run_alignment(fingerprinted_path, run_prefix):
         
         build_command = 'bowtie2-build {} {} -q'.format(genome_file.resolve(), bowtie_indexes_path)
         subprocess.run(build_command, shell=True)
-        
+
         output_full_sam = inter_path("{}_bwt2_full.sam".format(run_prefix))
         align_command = 'bowtie2 -x {} -t -f {} -S {} -p {} -a --quiet'.format(bowtie_indexes_path, fingerprinted_path, output_full_sam, cores_to_use)
         subprocess.run(align_command, shell=True)
         
         # use "cat" for non-windows, "type" for windows
-        if platform.system() is 'Windows':
-            filter_command = '''awk "$0 ~\""NM:i:\"""  {} > {}'''.format(output_full_sam, output_no_mismatch_sam)
+        if platform.system() == 'Windows':
+            make_matches_command = '''awk "$0 ~\""NM:i:0\""" {} > {}'''.format(output_full_sam, output_no_mismatch_sam)
+            make_no_matches_command = '''awk "$0 !~\""NM:i:0\"" && $0 !~ /^@/" {} > {}'''.format(output_full_sam, output_mismatch_sam)
         else:
-            filter_command = '''cat | awk '$0 ~"NM:i:0"' >> {}'''.format(output_full_sam, output_no_mismatch_sam)
-        print(filter_command)
-        subprocess.run(filter_command, shell=True)
+            make_matches_command = '''awk '$0 ~"NM:i:0"' {} > {}'''.format(output_full_sam, output_no_mismatch_sam)
+            make_no_matches_command = '''awk '$0 !~"NM:i:0" && $0 !~ /^@/' {} > {}'''.format(output_full_sam, output_mismatch_sam)
 
-        if delete_intermediates:
-            shutil.rmtree(bowtie_indexes_path.parent.resolve())
-            os.remove(output_full_sam)
+        subprocess.run(make_matches_command, shell=True)
+        subprocess.run(make_no_matches_command, shell=True)       
 
     print("Generating the histogram data...")
-    hist_results = correct_output_reads(output_no_mismatch_sam, run_prefix)
+    hist_results = correct_output_reads(output_no_mismatch_sam, output_mismatch_sam, meta_info, run_prefix)
     elapsed_time = round(time.perf_counter() - start, 2)
     print("Finished doing genome mapping and generating histogram data in {} seconds".format(elapsed_time))
+    if delete_intermediates:
+        os.remove(output_mismatch_sam)
+        os.remove(output_no_mismatch_sam)
+        shutil.rmtree(bowtie_indexes_path.parent.resolve())
+        os.remove(output_full_sam)
     return hist_results
 
-def correct_output_reads(sam_path, run_prefix):
-    SAM_full = pd.read_csv(sam_path,sep="\t",usecols=[0,1,2,3,4,9,11,12,13,15,16,17],header=None)
+def correct_output_reads(matches_sam, no_matches_sam, meta_info, run_prefix):
+    SAM_full = pd.read_csv(matches_sam,sep="\t",usecols=[0,1,2,3,4,9,11,12,13,15,16,17],header=None)
     col_names = "read_number, flag_sum, ref_genome, ref_genome_coordinate, mapq, read_sequence, AS, XN, XM, XG, NM, MD".split(", ")
     SAM_full.columns = col_names
 
@@ -101,8 +111,33 @@ def correct_output_reads(sam_path, run_prefix):
     fasta_path = output_path("{}_unique_reads.fasta".format(run_prefix))
     with open(fasta_path, 'w', newline='') as file:
         file.write(fasta_file)
+
+    ## Check the fingerprints without genome matches against donor, spike and CRISPR Sequence
+    ##
+    ## We check the sequences with no genome matches against these donor and spike first. 
+    ## If it doesn't match either of them, we additionally check a
+    ## sample-specific CRISPR Sequence Array,
+    ## These read counts are added to the output logs for the run. 
+    no_match_sequences = pd.read_csv(no_matches_sam, sep="\t", usecols=[0,1,2,3,4,9,11,12,13,15,16,17], header=None)
+    col_names = "read_number, flag_sum, ref_genome, ref_genome_coordinate, mapq, read_sequence, AS, XN, XM, XG, NM, MD".split(", ")
+    no_match_sequences.columns = col_names
+
+    crispr_array_seq = meta_info['CRISPR Array Sequence']
+    donor_matches = 0
+    spike_matches = 0
+    cripsr_seq_matches = 0
+    for read_seq in no_match_sequences['read_sequence']:
+        if read_seq == donor_fp:
+            donor_matches += 1
+        elif read_seq == spike_fp:
+            spike_matches += 1
+        elif crispr_array_seq and read_seq in crispr_array_seq:
+            cripsr_seq_matches += 1
+
     return {
-        'Genome Length': genome_length,
         'Unique Genome-Mapping Reads': len(unique_reads.read_number.unique()),
-        'Non-Unique Genome-Mapping Reads': len(non_unique_reads.read_number.unique())
+        'Non-Unique Genome-Mapping Reads': len(non_unique_reads.read_number.unique()),
+        'Donor Reads': donor_matches,
+        'Spike Reads': spike_matches,
+        'CRISPR Array Reads': cripsr_seq_matches
     }
