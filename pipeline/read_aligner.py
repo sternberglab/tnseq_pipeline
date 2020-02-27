@@ -9,6 +9,7 @@ import multiprocessing
 import shutil
 import numpy as np
 import subprocess
+import platform
 import time
 
 from .utils import inter_path, output_path
@@ -39,16 +40,21 @@ def run_alignment(fingerprinted_path, run_prefix):
         align_command = 'bowtie2 -x {} -t -f {} -S {} -p {} -a --quiet'.format(bowtie_indexes_path, fingerprinted_path, output_full_sam, cores_to_use)
         subprocess.run(align_command, shell=True)
         
-        filter_command = '''cat {} | awk '$0 ~"NM:i:0"' > {}'''.format(output_full_sam, output_no_mismatch_sam)
+        # use "cat" for non-windows, "type" for windows
+        if platform.system() is 'Windows':
+            filter_command = '''awk "$0 ~\""NM:i:\"""  {} > {}'''.format(output_full_sam, output_no_mismatch_sam)
+        else:
+            filter_command = '''cat | awk '$0 ~"NM:i:0"' >> {}'''.format(output_full_sam, output_no_mismatch_sam)
+        print(filter_command)
         subprocess.run(filter_command, shell=True)
-        
+
         if delete_intermediates:
             shutil.rmtree(bowtie_indexes_path.parent.resolve())
             os.remove(output_full_sam)
 
     print("Generating the histogram data...")
     hist_results = correct_output_reads(output_no_mismatch_sam, run_prefix)
-    elapsed_time = time.perf_counter() - start
+    elapsed_time = round(time.perf_counter() - start, 2)
     print("Finished doing genome mapping and generating histogram data in {} seconds".format(elapsed_time))
     return hist_results
 

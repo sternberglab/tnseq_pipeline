@@ -33,14 +33,14 @@ def main():
 
 		log_info = {'Code': code, 'Qscore Threshold': str(Qscore_threshold)}
 		run_prefix = "{}_Q{}".format(code, Qscore_threshold)
-		
+
 		# Start at the end to avoid repeating steps with saved results
 		histogram_path = output_path("{}_genome_read_locations.csv".format(run_prefix))
-		fp_path = output_path("{}_FINGERPRINTED.fasta".format(run_prefix))
-			
-		if not Path(histogram_path).exists() or not Path(fp_path).exists():
+		unique_reads_path = output_path("{}_genome_read_locations.csv".format(run_prefix))
+		if not Path(histogram_path).exists() or not Path(unique_reads_path).exists():
 			print("can't find either histogram csv or fingerprinted reads for {}".format(run_prefix))
 			
+			fp_path = inter_path("{}_FINGERPRINTED.fasta".format(run_prefix))
 			if not Path(fp_path).exists():
 				filtered_path = inter_path('{}_FILTERED.fastq'.format(run_prefix))
 				if not Path(filtered_path).exists():
@@ -58,7 +58,6 @@ def main():
 
 		run_information = make_genome_plots(histogram_path)
 		
-		make_trans_dist_plot(fp_path, run_information)
+		make_trans_dist_plot(unique_reads_path, run_information)
 		
-
 main()
