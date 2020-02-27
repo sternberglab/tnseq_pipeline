@@ -3,6 +3,7 @@ import os
 import csv
 from tempfile import NamedTemporaryFile
 import shutil
+from datetime import datetime
 
 intermediates_dir = ''
 outputs_dir = ''
@@ -31,13 +32,16 @@ log_fieldnames = [
 	'Valid Fingerprint Reads',
 	'Unique Genome-Mapping Reads',
 	'Non-Unique Genome-Mapping Reads',
-	'Donor Reads'
+	'Donor Reads', 
+	'Analysis Date'
 ]
 
 def update_log(data):
 	if not data['Code'] or not data['Qscore Threshold']:
 		print("Cannot make a log entry without a code and Qscore threshold")
 		return
+
+	data['Analysis Date'] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
 	log_path = os.path.join(outputs_dir, '..', 'output_log.csv')
 	if not Path(log_path).exists():
@@ -53,11 +57,11 @@ def update_log(data):
 			writer = csv.DictWriter(tempfile, fieldnames=log_fieldnames)
 			found = False
 
-			for row in reader:
-				if row['Code'] == data['Code'] and row['Qscore Threshold'] == data['Qscore Threshold']:
-					row.update(data)
-					found = True
-				writer.writerow(row)
+			#for row in reader:
+				#if row['Code'] == data['Code'] and row['Qscore Threshold'] == data['Qscore Threshold']:
+				#	row.update(data)
+				#	found = True
+				#writer.writerow(row)
 			if not found:
 				writer.writerow(data)
 		shutil.move(tempfile.name, log_path)
