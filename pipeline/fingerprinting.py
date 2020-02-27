@@ -2,6 +2,7 @@ from Bio import SeqIO
 from Bio.SeqRecord import SeqRecord
 from pathlib import Path
 import time
+import os
 
 from parameters import flank_sequence, fingerprint_length, delete_intermediates
 

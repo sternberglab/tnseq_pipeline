@@ -15,7 +15,6 @@ from .utils import output_path
 # Run parameters for transposition distance histogram
 query_length = 500
 on_target_window = 100
-plot_overlap = True
 
 from types import SimpleNamespace
 
