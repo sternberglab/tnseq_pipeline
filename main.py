@@ -13,7 +13,8 @@ from pipeline.utils import inter_path, update_log, output_path, setup_paths
 from pipeline.read_raw_files import process_files, unzip_files
 from pipeline.fingerprinting import fingerprinting
 from pipeline.read_aligner import run_alignment
-from pipeline.genome_histogram import make_plots
+from pipeline.plotting import make_genome_plots
+from pipeline.trans_dist_plot import make_trans_dist_plot
 
 from parameters import raw_files_dir, Qscore_threshold, genome_path
 
@@ -52,8 +53,12 @@ def main():
 
 			alignment_results = run_alignment(fp_path, run_prefix)
 			log_info.update(alignment_results)
+
 		update_log(log_info)
 
-		make_plots(histogram_path, fp_path)
+		run_information = make_genome_plots(histogram_path)
+		
+		make_trans_dist_plot(fp_path, run_information)
+		
 
 main()
