@@ -3,7 +3,7 @@
 # This will delete intermediate files
 # It will make full analysis from scratch take longer
 # but free up disk space
-delete_intermediates = False
+delete_intermediates = True
 
 # Path to an info csv file with various information, see the example file for details
 info_file = "./inputs/experiment_info.csv"

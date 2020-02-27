@@ -43,7 +43,7 @@ def main():
 		# Start at the end to avoid repeating steps with saved results
 		histogram_path = output_path("{}_genome_read_locations.csv".format(run_prefix))
 		unique_reads_path = output_path("{}_unique_reads.fasta".format(run_prefix))
-		if not Path(histogram_path).exists() or not Path(unique_reads_path).exists() or True:
+		if not Path(histogram_path).exists() or not Path(unique_reads_path).exists():
 
 			fp_path = inter_path("{}_FINGERPRINTED.fasta".format(run_prefix))
 			if not Path(fp_path).exists():

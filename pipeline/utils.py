@@ -27,7 +27,6 @@ def output_path(filename):
 
 log_fieldnames = [
 	'Sample', 
-	'Genome Length',
 	'Qscore Threshold',
 	'Total Reads',
 	'Filtered Reads',

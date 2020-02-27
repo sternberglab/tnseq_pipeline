@@ -208,7 +208,7 @@ def make_trans_dist_plot(fastaFile, run_information):
     code = run_information['Sample']
     qScore = run_information['Qscore Threshold']
     run_prefix = "{}_Q{}".format(code, qScore)
-    genome_length = int(run_information['Genome Length'])
+    genome_length = len(SeqIO.read(Path(genome_path), 'fasta'))
     desc = run_information['Information for graphs']
     psl = run_information['pCascade #']
     spacer_location = int(run_information['End of protospacer'])

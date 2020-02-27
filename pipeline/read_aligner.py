@@ -62,6 +62,7 @@ def run_alignment(fingerprinted_path, run_prefix, meta_info):
     elapsed_time = round(time.perf_counter() - start, 2)
     print("Finished doing genome mapping and generating histogram data in {} seconds".format(elapsed_time))
     if delete_intermediates:
+        os.remove(fingerprinted_path)
         os.remove(output_mismatch_sam)
         os.remove(output_no_mismatch_sam)
         shutil.rmtree(bowtie_indexes_path.parent.resolve())
