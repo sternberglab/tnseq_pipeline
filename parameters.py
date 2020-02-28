@@ -38,3 +38,17 @@ transposon_site_duplication_length = 5
 
 # The path to the genome file to use for read alignment
 genome_path = "../working/genome.fasta"
+
+
+# 4. GRAPHS
+
+# Bin size for genome-wide plots in base pairs
+genome_bin_size = 5000
+
+# Percent of reads at which to cap the y-axis on the zoomed in histogram
+# to show low-level reads
+low_reads_cap_percent = 0.50
+
+# Run parameters for transposition distance histogram
+query_length = 500
+on_target_window = 100

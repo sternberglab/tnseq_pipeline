@@ -9,12 +9,8 @@ import heapq
 import matplotlib.pyplot as plt
 import time
 
-from parameters import genome_path
+from parameters import genome_path, query_length, on_target_window
 from .utils import output_path
-
-# Run parameters for transposition distance histogram
-query_length = 500
-on_target_window = 100
 
 from types import SimpleNamespace
 

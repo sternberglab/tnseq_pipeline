@@ -9,7 +9,7 @@ from Bio import SeqIO
 import heapq
 import time
 
-from parameters import info_file, genome_path
+from parameters import info_file, genome_path, genome_bin_size, low_reads_cap_percent
 from .utils import output_path, get_log_entry
 
 ####
@@ -26,19 +26,14 @@ plt.rcParams['font.family'] = "sans-serif"
 
 plt.ioff()
 
-# Run parameters for genome wide histograms
-bin_size = 5000  # in bp
-bin_scale = int(100000/bin_size)
-percent = 0.50
-
-def get_bins(filename, bin_size, genome_length):
+def get_bins(filename, genome_length):
     csv = np.genfromtxt(filename, delimiter=",", skip_header=1)
-    number_of_bins = (genome_length // bin_size) + 1
+    number_of_bins = (genome_length // genome_bin_size) + 1
     bin_numbers = np.array(range(1, number_of_bins + 1))
     bin_values = []
     for i in bin_numbers:
-        min_val = (i - 1) * bin_size
-        max_val = i * bin_size
+        min_val = (i - 1) * genome_bin_size
+        max_val = i * genome_bin_size
         counts_in_bin = [entry[1] for entry in csv if min_val <= entry[0] < max_val]
         total_for_bin = sum(counts_in_bin)
         bin_values.append(total_for_bin)
@@ -46,6 +41,8 @@ def get_bins(filename, bin_size, genome_length):
     return bin_numbers, np_bin_values
 
 def setup_axes(axs, max_x, max_y):
+    bin_scale = int(100000/genome_bin_size)
+
     axs.spines['top'].set_visible(False)
     axs.spines['right'].set_visible(False)
     axs.spines['bottom'].set_position('zero')
@@ -88,24 +85,26 @@ def plot_binned(filepath, run_information, yAxis_type):
     genome_length = len(SeqIO.read(Path(genome_path), 'fasta'))
 
     # determine which bin the spacer lies in
-    spacer_bin = int(spacer_location/bin_size) + 0.5  
+    spacer_bin = int(spacer_location / genome_bin_size) + 0.5  
 
     # get bins and counts for the histogram
-    b, a2 = get_bins(filepath, bin_size, genome_length)
+    b, a2 = get_bins(filepath, genome_length)
 
     total_reads = int(sum(a2))
 
     max_x = len(a2)
 
+    bin_scale = int(100000/genome_bin_size)
     # For normalized and zoomed graphs, normalized based on total reads as a percentage
     max_y = max_y_label = None
     if yAxis_type == 'zoomed':
-        max_y = total_reads * percent * 0.01
-        max_y_label = percent
+        max_y = total_reads * low_reads_cap_percent * 0.01
+        max_y_label = low_reads_cap_percent
+        a2 = np.fmin(a2, max_y)
     elif yAxis_type == 'normalized':
-        a2 = (100*a2)/total_reads
         max_y = 100
         max_y_label = '100%'
+        a2 = (100*a2)/total_reads
     elif yAxis_type == 'raw':
         max_y = int(max(a2))
         max_y_label = str(max_y)
