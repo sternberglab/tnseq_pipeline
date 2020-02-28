@@ -3,21 +3,23 @@
 # This will delete intermediate files
 # It will make full analysis from scratch take longer
 # but free up disk space
-delete_intermediates = False
+delete_intermediates = True
 
 # Path to an info csv file with various information, see the example file for details
 info_file = "./inputs/experiment_info.csv"
 
 # 1. FOR LOADING NEW DATA
 
-# The directory where your raw Illumina files are held 
-# Can be zip files or unzipped
+# The directory where your raw Illumina files are held, 
+# as well as where intermediaries and outputs will be saved
+# Illumina files should be placed in a /raw subfolder
+# and can be zip files or unzipped
 # This can be either relative or absolute path
-raw_files_dir = "../raw_files"
+working_dir = "../working"
 
 # The Qscore_threshold to use
 # This must be defined (use -1 if do not want to filter)
-Qscore_threshold = 20
+Qscore_threshold = 19
 
 
 # 2. FOR FINGERPRINTING
@@ -35,4 +37,4 @@ fingerprint_length = 17
 transposon_site_duplication_length = 5
 
 # The path to the genome file to use for read alignment
-genome_path = "../Example/genome.fasta"
+genome_path = "../working/genome.fasta"

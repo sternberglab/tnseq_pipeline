@@ -16,7 +16,7 @@ from pipeline.read_aligner import run_alignment
 from pipeline.plotting import make_genome_plots
 from pipeline.trans_dist_plot import make_trans_dist_plot
 
-from parameters import raw_files_dir, Qscore_threshold, genome_path, info_file
+from parameters import working_dir, Qscore_threshold, genome_path, info_file
 
 def main():
 	if not Path(info_file).exists():
@@ -27,7 +27,8 @@ def main():
 	unzip_files()
 
 	# Examine all raw fastq files to see what samples are there for processing
-	raw_files = Path(raw_files_dir).glob('*.fastq')
+	raw_files_dir = Path(os.path.join(working_dir, 'raw'))
+	raw_files = raw_files_dir.glob('*.fastq')
 	samples = set(r.name.split('_')[0] for r in raw_files)
 	for sample in samples:
 		print("PROCESSING SAMPLE {}...".format(sample))
@@ -56,8 +57,8 @@ def main():
 					process_results = process_files(sample, filenames, filtered_path)
 					log_info.update(process_results)
 				
-		fp_results = fingerprinting(filtered_path, fp_path)
-		'''log_info.update(fp_results)
+				fp_results = fingerprinting(filtered_path, fp_path)
+				log_info.update(fp_results)
 
 			alignment_results = run_alignment(fp_path, run_prefix, meta_info)
 			log_info.update(alignment_results)
@@ -65,6 +66,6 @@ def main():
 		update_log(log_info)
 		run_information = make_genome_plots(histogram_path, meta_info)
 		
-		make_trans_dist_plot(unique_reads_path, run_information)'''
+		make_trans_dist_plot(unique_reads_path, run_information)
 		
 main()

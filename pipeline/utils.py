@@ -5,7 +5,7 @@ from tempfile import NamedTemporaryFile
 import shutil
 from datetime import datetime
 
-from parameters import info_file
+from parameters import info_file, working_dir
 
 intermediates_dir = ''
 outputs_dir = ''
@@ -13,8 +13,8 @@ def setup_paths(code, Qscore):
 	folder_name = '{}_Q{}'.format(code, Qscore)
 	global intermediates_dir
 	global outputs_dir
-	intermediates_dir = os.path.join(Path(__file__).cwd(), 'intermediates', folder_name)
-	outputs_dir = os.path.join(Path(__file__).cwd(), 'outputs', folder_name)
+	intermediates_dir = os.path.join(Path(working_dir), 'intermediates', folder_name)
+	outputs_dir = os.path.join(Path(working_dir), 'outputs', folder_name)
 	os.makedirs(intermediates_dir, exist_ok=True)
 	os.makedirs(os.path.join(outputs_dir, 'plots'), exist_ok=True)
 	os.makedirs(outputs_dir, exist_ok=True)
@@ -32,7 +32,7 @@ log_fieldnames = [
 	'Filtered Reads',
 	'Valid Fingerprint Reads',
 	'Unique Genome-Mapping Reads',
-	'Non-Unique Genome-Mapping Reads',
+	'Total Genome-Mapping Reads',
 	'Undigested Donor Reads', 
 	'Spike-in Reads',
 	'CRISPR Array Self-Targeting Reads',
