@@ -133,10 +133,12 @@ def correct_output_reads(matches_sam, no_matches_sam, meta_info, run_prefix):
         elif crispr_array_seq and read_seq in crispr_array_seq:
             cripsr_seq_matches += 1
 
+    unique_reads_seq_count = len(unique_reads.read_number.unique())
+    non_unique_reads_seq_count = len(non_unique_reads.read_number.unique())
     return {
-        'Unique Genome-Mapping Reads': len(unique_reads.read_number.unique()),
-        'Non-Unique Genome-Mapping Reads': len(non_unique_reads.read_number.unique()),
-        'Donor Reads': donor_matches,
-        'Spike Reads': spike_matches,
-        'CRISPR Array Reads': cripsr_seq_matches
+        'Unique Genome-Mapping Reads': unique_reads_seq_count,
+        'Total Genome-Mapping Reads': non_unique_reads_seq_count + unique_reads_seq_count,
+        'Undigested Donor Reads': donor_matches,
+        'Spike-in Reads': spike_matches,
+        'CRISPR Array Self-Targeting Reads': cripsr_seq_matches
     }

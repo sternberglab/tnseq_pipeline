@@ -40,7 +40,7 @@ def process_files(code, input_filenames, filtered_path):
     elapsed = round(time.perf_counter() - start, 2)
     percent_passing = round((total_records - filtered_records) / total_records, 2)
     print("Read {} total records, {} filtered records ({}%) in {} seconds".format(total_records, filtered_records, percent_passing, elapsed))
-    return {'Total Reads': total_records, 'Filtered Reads': filtered_records}
+    return {'Total Raw Reads': total_records, 'Filtered Reads': filtered_records}
 
 def unzip_files():
     zip_files = Path(raw_files_dir).glob('*.zip')

@@ -3,7 +3,7 @@
 # This will delete intermediate files
 # It will make full analysis from scratch take longer
 # but free up disk space
-delete_intermediates = True
+delete_intermediates = False
 
 # Path to an info csv file with various information, see the example file for details
 info_file = "./inputs/experiment_info.csv"
@@ -13,7 +13,7 @@ info_file = "./inputs/experiment_info.csv"
 # The directory where your raw Illumina files are held 
 # Can be zip files or unzipped
 # This can be either relative or absolute path
-raw_files_dir = "../Example/rawFastQs"
+raw_files_dir = "../raw_files"
 
 # The Qscore_threshold to use
 # This must be defined (use -1 if do not want to filter)

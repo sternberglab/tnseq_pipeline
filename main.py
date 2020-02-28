@@ -43,6 +43,8 @@ def main():
 		# Start at the end to avoid repeating steps with saved results
 		histogram_path = output_path("{}_genome_read_locations.csv".format(run_prefix))
 		unique_reads_path = output_path("{}_unique_reads.fasta".format(run_prefix))
+		filtered_path = inter_path('{}_FILTERED.fastq'.format(run_prefix))
+		fp_path = inter_path("{}_FINGERPRINTED.fasta".format(run_prefix))
 		if not Path(histogram_path).exists() or not Path(unique_reads_path).exists():
 
 			fp_path = inter_path("{}_FINGERPRINTED.fasta".format(run_prefix))
@@ -54,8 +56,8 @@ def main():
 					process_results = process_files(sample, filenames, filtered_path)
 					log_info.update(process_results)
 				
-				fp_results = fingerprinting(filtered_path, fp_path)
-				log_info.update(fp_results)
+		fp_results = fingerprinting(filtered_path, fp_path)
+		'''log_info.update(fp_results)
 
 			alignment_results = run_alignment(fp_path, run_prefix, meta_info)
 			log_info.update(alignment_results)
@@ -63,6 +65,6 @@ def main():
 		update_log(log_info)
 		run_information = make_genome_plots(histogram_path, meta_info)
 		
-		make_trans_dist_plot(unique_reads_path, run_information)
+		make_trans_dist_plot(unique_reads_path, run_information)'''
 		
 main()

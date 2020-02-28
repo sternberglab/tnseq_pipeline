@@ -13,17 +13,25 @@ def hamming_dist(s1, s2):
 def fpgen(input_reads):  # generator function that returns
     flank_length = len(flank_sequence)
     for record in SeqIO.parse(input_reads, "fastq"):
-        i = 0
-        while 0 <= i <= (len(record.seq) - flank_length):
-            query = record.seq[i:i+flank_length]
-            if hamming_dist(query, flank_sequence) < 2:
-                if i >= fingerprint_length:
-                    fingerprint = record.seq[i - fingerprint_length:i]
-                    newrec = SeqRecord(fingerprint, id=record.id, name=record.name)
-                    yield newrec
-                i += 2000
-            else:
-                i += 1
+        found = record.seq.find(flank_sequence)
+        if found > -1:
+            if found >= fingerprint_length:
+                fingerprint = record.seq[found - fingerprint_length:found]
+                newrec = SeqRecord(fingerprint, id=record.id, name=record.name)
+                yield newrec
+        
+        else:
+            i = 0
+            while 0 <= i <= (len(record.seq) - flank_length):
+                query = record.seq[i:i+flank_length]
+                if hamming_dist(query, flank_sequence) < 2:
+                    if i >= fingerprint_length:
+                        fingerprint = record.seq[i - fingerprint_length:i]
+                        newrec = SeqRecord(fingerprint, id=record.id, name=record.name)
+                        yield newrec
+                    i += 2000
+                else:
+                    i += 1
 
 def fingerprinting(input_reads, fingerprinted_path):  # main command function for filtering
     print("Fingerprinting records...")

@@ -28,14 +28,14 @@ def output_path(filename):
 log_fieldnames = [
 	'Sample', 
 	'Qscore Threshold',
-	'Total Reads',
+	'Total Raw Reads',
 	'Filtered Reads',
 	'Valid Fingerprint Reads',
 	'Unique Genome-Mapping Reads',
 	'Non-Unique Genome-Mapping Reads',
-	'Donor Reads', 
-	'Spike Reads',
-	'CRISPR Array Reads',
+	'Undigested Donor Reads', 
+	'Spike-in Reads',
+	'CRISPR Array Self-Targeting Reads',
 	'Analysis Date'
 ]
 
