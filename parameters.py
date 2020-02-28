@@ -13,7 +13,7 @@ info_file = "./inputs/experiment_info.csv"
 # The directory where your raw Illumina files are held 
 # Can be zip files or unzipped
 # This can be either relative or absolute path
-raw_files_dir = "../raw_files"
+raw_files_dir = "../Example/rawFastQs"
 
 # The Qscore_threshold to use
 # This must be defined (use -1 if do not want to filter)

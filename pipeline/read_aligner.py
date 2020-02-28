@@ -26,7 +26,7 @@ def run_alignment(fingerprinted_path, run_prefix, meta_info):
     output_no_mismatch_sam = inter_path("{}_bwt2_no_mismatches_full.sam".format(run_prefix))
     output_mismatch_sam = inter_path("{}_bwt2_mismatches_full.sam".format(run_prefix))
 
-    if not Path(output_no_mismatch_sam).exists() or True:
+    if not Path(output_no_mismatch_sam).exists() or not Path(output_mismatch_sam).exists():
         print("Finding genome alignments...")
         genome_file = Path(genome_path)
         # First have bowtie build and index the genome if it hasn't yet
@@ -46,14 +46,12 @@ def run_alignment(fingerprinted_path, run_prefix, meta_info):
         align_command = 'bowtie2 -x {} -t -f {} -S {} -p {} -a --quiet'.format(bowtie_indexes_path, fingerprinted_path, output_full_sam, cores_to_use)
         subprocess.run(align_command, shell=True)
         
-        # use "cat" for non-windows, "type" for windows
-        if platform.system() == 'Windows':
-            make_matches_command = '''awk "$0 ~\""NM:i:0\""" {} > {}'''.format(output_full_sam, output_no_mismatch_sam)
-            make_no_matches_command = '''awk "$0 !~\""NM:i:0\"" && $0 !~ /^@/" {} > {}'''.format(output_full_sam, output_mismatch_sam)
-        else:
-            make_matches_command = '''awk '$0 ~"NM:i:0"' {} > {}'''.format(output_full_sam, output_no_mismatch_sam)
-            make_no_matches_command = '''awk '$0 !~"NM:i:0" && $0 !~ /^@/' {} > {}'''.format(output_full_sam, output_mismatch_sam)
-
+        # Use files with the awk because windows is crazy
+        # about escaping characters in shell commands
+        no_matches_path = Path('./awk_commands/no_matches')
+        matches_path = Path('./awk_commands/yes_matches')
+        make_matches_command = '''awk -f {} {} > {}'''.format(matches_path, output_full_sam, output_no_mismatch_sam)
+        make_no_matches_command = '''awk -f {} {} > {}'''.format(no_matches_path, output_full_sam, output_mismatch_sam)
         subprocess.run(make_matches_command, shell=True)
         subprocess.run(make_no_matches_command, shell=True)       
 
