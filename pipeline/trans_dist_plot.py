@@ -9,7 +9,7 @@ import heapq
 import matplotlib.pyplot as plt
 import time
 
-from parameters import genome_path, query_length, on_target_window
+from parameters import genome_path, query_length, on_target_window, plots_filetype, plots_dpi
 from .utils import output_path
 
 from types import SimpleNamespace
@@ -349,9 +349,9 @@ def make_trans_dist_plot(fastaFile, run_information):
 
             fig.set_size_inches(6, 4.2)
             fig.subplots_adjust(top=0.65)
-            plot_name = "{}_trans_dist_hist_no_overlap.svg".format(run_prefix)
+            plot_name = "{}_trans_dist_hist_no_overlap.{}".format(run_prefix, plots_filetype)
         # save the plot and close it
-        plt.savefig(output_path(os.path.join('plots', plot_name)), dpi=500)
+        plt.savefig(output_path(os.path.join('plots', plot_name)), dpi=plots_dpi)
         plt.close()
 
     # Return information to append to the overall output logs for this run (Sample code plus Qscore combo)

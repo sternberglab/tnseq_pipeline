@@ -9,7 +9,7 @@ from Bio import SeqIO
 import heapq
 import time
 
-from parameters import info_file, genome_path, genome_bin_size, low_reads_cap_percent
+from parameters import info_file, genome_path, genome_bin_size, low_reads_cap_percent, plots_filetype, plots_dpi
 from .utils import output_path, get_log_entry
 
 ####
@@ -138,7 +138,7 @@ def plot_binned(filepath, run_information, yAxis_type):
 
     # save figure
     run_prefix = "{}_Q{}".format(code, qScore)
-    plt.savefig(output_path(os.path.join('plots', '{}_genome_hist_{}.svg'.format(run_prefix, yAxis_type))), dpi=500)
+    plt.savefig(output_path(os.path.join('plots', '{}_genome_hist_{}.{}'.format(run_prefix, yAxis_type, plots_filetype))), dpi=plots_dpi)
     plt.close()  # closes the matplotlib preview popup window
 
 

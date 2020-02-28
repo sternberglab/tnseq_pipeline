@@ -19,7 +19,7 @@ working_dir = "../working"
 
 # The Qscore_threshold to use
 # This must be defined (use -1 if do not want to filter)
-Qscore_threshold = 19
+Qscore_threshold = 20
 
 
 # 2. FOR FINGERPRINTING
@@ -41,6 +41,9 @@ genome_path = "../working/genome.fasta"
 
 
 # 4. GRAPHS
+# For all graphs, use the following filetype and dpi
+plots_filetype = 'png'
+plots_dpi = 600
 
 # Bin size for genome-wide plots in base pairs
 genome_bin_size = 5000
