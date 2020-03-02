@@ -60,16 +60,10 @@ def setup_axes(axs, max_x, max_y, genome_length):
     # set up xticks
     if genome_length > 6000000:
         increment = 1000000
-        tick_increment = int(1000000 / genome_bin_size)
-        label_increment = genome_length / 1000000
     else:
         increment = 500000
-        tick_increment = int(500000 / genome_bin_size)
-        label_increment = genome_length / 500000
     
     x_axis_size = int(genome_length / genome_bin_size)
-    print(range(0, x_axis_size, int(increment / genome_bin_size)))
-    print(np.arange(0, genome_length / 1000000, increment / 1000000))
 
     axs.set_xticks(range(0, x_axis_size, int(increment / genome_bin_size)))
     axs.set_xticklabels(np.arange(0, genome_length / 1000000, increment / 1000000))
