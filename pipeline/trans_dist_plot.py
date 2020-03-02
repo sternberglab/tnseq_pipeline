@@ -207,9 +207,8 @@ def make_trans_dist_plot(fastaFile, run_information):
     genome_length = len(SeqIO.read(Path(genome_path), 'fasta'))
     desc = run_information['Information for graphs']
     psl = run_information['pCascade #']
-    spacer_location = int(run_information['End of protospacer'])
     description = run_information['Description']
-    spacer = run_information['Spacer']
+    spacer = run_information['Spacer'].upper()
     exp_date = run_information['Experiment date']
     direction = run_information['Target direction']
     

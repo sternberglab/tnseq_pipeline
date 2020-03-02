@@ -30,16 +30,17 @@ def main():
 	raw_files = raw_files_dir.glob('*.fastq')
 	samples = set(r.name.split('_')[0] for r in raw_files)
 	for sample in samples:
+		meta_info = get_info_for_sample(sample)
+		if not meta_info:
+			print("Sample {} not found in the info file, skipping processing".format(sample))
+			continue
+
 		print("PROCESSING SAMPLE {}...".format(sample))
 		print('----------')
 		print('----------')
 		setup_paths(sample, Qscore_threshold)
 
 		log_info = {'Sample': sample, 'Qscore Threshold': str(Qscore_threshold)}
-		meta_info = get_info_for_sample(sample)
-		if not meta_info:
-			print("Sample {} not found in the info file, skipping processing".format(sample))
-			continue
 
 		run_prefix = "{}_Q{}".format(sample, Qscore_threshold)
 

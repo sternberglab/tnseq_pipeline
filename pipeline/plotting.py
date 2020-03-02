@@ -40,7 +40,7 @@ def get_bins(filename, genome_length):
     np_bin_values = np.asarray(bin_values)
     return bin_numbers, np_bin_values
 
-def setup_axes(axs, max_x, max_y):
+def setup_axes(axs, max_x, max_y, genome_length):
     bin_scale = int(100000/genome_bin_size)
 
     axs.spines['top'].set_visible(False)
@@ -58,9 +58,21 @@ def setup_axes(axs, max_x, max_y):
     axs.yaxis.set_label_coords(-0.02, 0.5)
 
     # set up xticks
-    axs.set_xticks(range(0, 50*bin_scale, 5*bin_scale))
+    if genome_length > 6000000:
+        increment = 1000000
+        tick_increment = int(1000000 / genome_bin_size)
+        label_increment = genome_length / 1000000
+    else:
+        increment = 500000
+        tick_increment = int(500000 / genome_bin_size)
+        label_increment = genome_length / 500000
+    
+    x_axis_size = int(genome_length / genome_bin_size)
+    print(range(0, x_axis_size, int(increment / genome_bin_size)))
+    print(np.arange(0, genome_length / 1000000, increment / 1000000))
 
-    axs.set_xticklabels(np.arange(0, 5, 0.5))
+    axs.set_xticks(range(0, x_axis_size, int(increment / genome_bin_size)))
+    axs.set_xticklabels(np.arange(0, genome_length / 1000000, increment / 1000000))
 
     # set limits of graph area - different from spine limits
     # leave extra space on top for info text, and space on bottom for the spacer marker
@@ -80,12 +92,12 @@ def plot_binned(filepath, run_information, yAxis_type):
     desc = run_information['Information for graphs']
     psl = run_information['pCascade #']
     exp_date = run_information['Experiment date']
-    spacer_location = int(run_information['End of protospacer'])
+    spacer_locations = [int(loc) for loc in run_information['End of protospacer'].split()]
 
     genome_length = len(SeqIO.read(Path(genome_path), 'fasta'))
 
     # determine which bin the spacer lies in
-    spacer_bin = int(spacer_location / genome_bin_size) + 0.5  
+    spacer_bins = [int(spacer_location / genome_bin_size) + 0.5 for spacer_location in spacer_locations]
 
     # get bins and counts for the histogram
     b, a2 = get_bins(filepath, genome_length)
@@ -113,14 +125,15 @@ def plot_binned(filepath, run_information, yAxis_type):
 
     # set up figure
     fig, axs = plt.subplots(1, 1, tight_layout=True)
-    setup_axes(axs, max_x, max_y)
+    setup_axes(axs, max_x, max_y, genome_length)
     
     # 2 ticks on the y axis, one at 0 and on at max value of y (max reads)
     axs.set_yticks([0, max_y])
     axs.set_yticklabels([0, max_y_label])
     
-    # 1 scatter plot point for protospacer marker
-    axs.scatter(spacer_bin, -0.03 * max_y, marker="^", c="#A32E79", s=33)
+    # 1. scatter plot points for protospacer markers
+    for spacer_bin in spacer_bins:
+        axs.scatter(spacer_bin, -0.03 * max_y, marker="^", c="#A32E79", s=33)
     # 2. main bar graph, width slightly >1 to avoid gaps between bars
     axs.bar(b, a2, color='#0D62AC', width=1.05)  
 
