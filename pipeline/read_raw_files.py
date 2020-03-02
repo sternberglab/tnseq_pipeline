@@ -2,6 +2,7 @@ from Bio import SeqIO
 from Bio.SeqRecord import SeqRecord
 import time
 import os
+import zipfile
 from pathlib import Path
 
 from .utils import inter_path

@@ -97,6 +97,8 @@ def correct_output_reads(matches_sam, no_matches_sam, meta_info, run_prefix):
     hist_path = output_path("{}_genome_read_locations.csv".format(run_prefix))
     counts.to_csv(hist_path)
     
+    
+    
     genome_length = len(SeqIO.read(Path(genome_path).resolve(), 'fasta').seq)
 
     fasta_sequence = []

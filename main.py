@@ -2,7 +2,6 @@ from pathlib import Path
 import os
 import csv
 import fnmatch
-import zipfile
 import gzip
 import shutil
 from Bio import SeqIO
@@ -38,6 +37,9 @@ def main():
 
 		log_info = {'Sample': sample, 'Qscore Threshold': str(Qscore_threshold)}
 		meta_info = get_info_for_sample(sample)
+		if not meta_info:
+			print("Sample {} not found in the info file, skipping processing".format(sample))
+			continue
 
 		run_prefix = "{}_Q{}".format(sample, Qscore_threshold)
 
