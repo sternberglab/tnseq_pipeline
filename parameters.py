@@ -6,7 +6,7 @@
 delete_intermediates = True
 
 # Path to an info csv file with various information, see the example file for details
-info_file = "./inputs/experiment_info.csv"
+info_file = "../rename/input_selective.csv"
 
 # 1. FOR LOADING NEW DATA
 
@@ -15,7 +15,7 @@ info_file = "./inputs/experiment_info.csv"
 # Illumina files should be placed in a /raw subfolder
 # and can be zip files or unzipped
 # This can be either relative or absolute path
-working_dir = "../working"
+working_dir = "../rename"
 
 # The Qscore_threshold to use
 # This must be defined (use -1 if do not want to filter)
@@ -35,10 +35,6 @@ fingerprint_length = 17
 
 # The number of bases duplicated by transposon insertion
 transposon_site_duplication_length = 5
-
-# The path to the genome file to use for read alignment
-genome_path = "../working/genome.fasta"
-
 
 # 4. GRAPHS
 # For all graphs, use the following filetype and dpi

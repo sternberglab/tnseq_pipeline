@@ -9,7 +9,7 @@ from Bio import SeqIO
 import heapq
 import time
 
-from parameters import info_file, genome_path, genome_bin_size, low_reads_cap_percent, plots_filetype, plots_dpi
+from parameters import info_file, genome_bin_size, low_reads_cap_percent, plots_filetype, plots_dpi
 from .utils import output_path, get_log_entry
 
 ####
@@ -88,6 +88,7 @@ def plot_binned(filepath, run_information, yAxis_type):
     exp_date = run_information['Experiment date']
     spacer_locations = [int(loc) for loc in run_information['End of protospacer'].split()]
 
+    genome_path = run_information['Genome fasta file']
     genome_length = len(SeqIO.read(Path(genome_path), 'fasta'))
 
     # determine which bin the spacer lies in

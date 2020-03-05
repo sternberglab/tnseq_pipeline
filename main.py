@@ -15,7 +15,7 @@ from pipeline.read_aligner import run_alignment
 from pipeline.plotting import make_genome_plots
 from pipeline.trans_dist_plot import make_trans_dist_plot
 
-from parameters import working_dir, Qscore_threshold, genome_path, info_file
+from parameters import working_dir, Qscore_threshold, info_file
 
 def main():
 	if not Path(info_file).exists():
@@ -25,11 +25,13 @@ def main():
 	# First unzip any zip files (deletes the zips if "delete_intermediates" is true)
 	unzip_files()
 
-	# Examine all raw fastq files to see what samples are there for processing
-	raw_files_dir = Path(os.path.join(working_dir, 'raw'))
-	raw_files = raw_files_dir.glob('*.fastq')
-	samples = set(r.name.split('_')[0] for r in raw_files)
-	for sample in samples:
+	samples_to_process = []
+	with open(Path(info_file), 'r', encoding='utf-8-sig') as opened_info_file:
+		reader = csv.DictReader(opened_info_file)
+		samples_to_process = [row for row in reader]
+
+	for sample_info in samples_to_process:
+		sample = sample_info['Sample']
 		meta_info = get_info_for_sample(sample)
 		if not meta_info:
 			print("Sample {} not found in the info file, skipping processing".format(sample))
@@ -43,9 +45,10 @@ def main():
 		log_info = {'Sample': sample, 'Qscore Threshold': str(Qscore_threshold)}
 
 		run_prefix = "{}_Q{}".format(sample, Qscore_threshold)
+		meta_info['run_prefix'] = run_prefix
 
 		# Start at the end to avoid repeating steps with saved results
-		histogram_path = output_path("{}_genome_read_locations.csv".format(run_prefix))
+		histogram_path = output_path("{}_genome_read_locations.csv".format(sample))
 		unique_reads_path = output_path("{}_unique_reads.fasta".format(run_prefix))
 		filtered_path = inter_path('{}_FILTERED.fastq'.format(run_prefix))
 		fp_path = inter_path("{}_FINGERPRINTED.fasta".format(run_prefix))
@@ -56,6 +59,7 @@ def main():
 
 				filtered_path = inter_path('{}_FILTERED.fastq'.format(run_prefix))
 				if not Path(filtered_path).exists():
+					raw_files_dir = os.path.join(Path(working_dir), 'raw')
 					filenames = [path.resolve() for path in Path(raw_files_dir).glob(sample + '*.fastq')]
 					process_results = process_files(sample, filenames, filtered_path)
 					log_info.update(process_results)
@@ -63,10 +67,10 @@ def main():
 				fp_results = fingerprinting(filtered_path, fp_path)
 				log_info.update(fp_results)
 
-			alignment_results = run_alignment(fp_path, run_prefix, meta_info)
+			alignment_results = run_alignment(fp_path, meta_info)
 			log_info.update(alignment_results)
 
-		update_log(log_info)
+			update_log(log_info)
 		run_information = make_genome_plots(histogram_path, meta_info)
 		
 		make_trans_dist_plot(unique_reads_path, run_information)
