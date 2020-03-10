@@ -144,11 +144,8 @@ def correct_reads(matches_sam, output_name):
     non_unique_reads = pd.DataFrame(columns=col_names)
     for chunk in sam_to_chunks(matches_sam):
         chunk.columns = col_names
-        print(chunk)
         chunk_unique_reads = chunk[chunk.read_number.isin(unique_read_numbers)]
-        print(chunk_unique_reads)
         unique_reads = unique_reads.append(chunk_unique_reads)
-        print(unique_reads)
         chunk_non_unique_reads = chunk[np.logical_not(chunk.read_number.isin(unique_read_numbers))]
         non_unique_reads = non_unique_reads.append(chunk_unique_reads)
 
