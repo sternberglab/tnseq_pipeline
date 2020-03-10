@@ -9,7 +9,7 @@ from Bio import SeqIO
 import heapq
 import time
 
-from parameters import info_file, genome_bin_size, low_reads_cap_percent, plots_filetype, plots_dpi
+from parameters import info_file, fig_size_inches, genome_bin_size, low_reads_cap_percent, plots_filetype, plots_dpi
 from .utils import output_path, get_log_entry
 
 ####
@@ -141,7 +141,7 @@ def plot_binned(filepath, run_information, yAxis_type, isPlasmid=False):
     axs.bar(b, a2, color='#0D62AC', width=1.05)  
 
     # size of output figures
-    fig.set_size_inches(8.9, 3.1)
+    fig.set_size_inches(fig_size_inches[0], fig_size_inches[1])
 
     # The text on the graph
     text_x = 5 * bin_scale

@@ -55,7 +55,7 @@ def main():
 		unique_reads_path = output_path("{}_unique_reads.fasta".format(run_prefix))
 		filtered_path = inter_path('{}_FILTERED.fastq'.format(run_prefix))
 		fp_path = inter_path("{}_FINGERPRINTED.fasta".format(run_prefix))
-		if not Path(histogram_path).exists() or not Path(unique_reads_path).exists() or True:
+		if not Path(histogram_path).exists() or not Path(unique_reads_path).exists():
 
 			fp_path = inter_path("{}_FINGERPRINTED.fasta".format(run_prefix))
 			if not Path(fp_path).exists():
