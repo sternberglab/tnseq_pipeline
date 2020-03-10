@@ -47,7 +47,7 @@ def find_alignments(read_sequences_fasta, genome_fasta, output_filename):
     make_matches_command = '''awk -f {} {} > {}'''.format(matches_cmd_path, output_alignment_results, matches_output_path)
     make_no_matches_command = '''awk -f {} {} > {}'''.format(no_matches_cmd_path, output_alignment_results, no_matches_output_path)
     subprocess.run(make_matches_command, shell=True)
-    subprocess.run(make_no_matches_command, shell=True) 
+    subprocess.run(make_no_matches_command, shell=True)
     return
 
 def sam_to_fasta(sam_path, fasta_path):
@@ -66,8 +66,8 @@ def run_alignment(fingerprinted_path, meta_info):
     genome_file_path = Path(meta_info['Genome fasta file'])
     plasmid_file_path = Path(meta_info['Plasmid fasta file'])
 
-    genome_reads = inter_path("genome_bwt2_matches.sam")
-    genome_no_reads = inter_path("genome_bwt2_no_matches.sam")
+    genome_reads = inter_path("{}_genome_bwt2_matches.sam").format(meta_info['Sample'])
+    genome_no_reads = inter_path("{}_genome_bwt2_no_matches.sam").format(meta_info['Sample'])
     hist_results = ''
     if not Path(genome_reads).exists() or True:
         if genome_file_path.exists():
@@ -83,8 +83,8 @@ def run_alignment(fingerprinted_path, meta_info):
     genome_no_reads_fasta = inter_path("{}.fasta".format(Path(genome_no_reads).stem))
     sam_to_fasta(genome_no_reads, genome_no_reads_fasta)
 
-    plasmid_reads = inter_path("plasmid_bwt2_matches.sam")
-    plasmid_no_reads = inter_path("plasmid_bwt2_no_matches.sam")
+    plasmid_reads = inter_path("{}_plasmid_bwt2_matches.sam").format(meta_info['Sample'])
+    plasmid_no_reads = inter_path("{}_plasmid_bwt2_no_matches.sam").format(meta_info['Sample'])
     if not Path(plasmid_reads).exists() or True:
         if plasmid_file_path.exists():
             find_alignments(genome_no_reads_fasta, meta_info['Plasmid fasta file'], '{}_plasmid'.format(meta_info['Sample']))

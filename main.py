@@ -14,6 +14,7 @@ from pipeline.fingerprinting import fingerprinting
 from pipeline.read_aligner import run_alignment
 from pipeline.plotting import make_genome_plots
 from pipeline.trans_dist_plot import make_trans_dist_plot
+from pipeline.plasmid_plot import plot_plasmid
 
 from parameters import working_dir, Qscore_threshold, info_file
 
@@ -37,6 +38,8 @@ def main():
 			print("Sample {} not found in the info file, skipping processing".format(sample))
 			continue
 
+		print('----------')
+		print('----------')
 		print("PROCESSING SAMPLE {}...".format(sample))
 		print('----------')
 		print('----------')
@@ -72,7 +75,10 @@ def main():
 
 			update_log(log_info)
 		run_information = make_genome_plots(histogram_path, meta_info)
+
+		plasmid_histogram_path = output_path("{}_plasmid_read_locations.csv".format(sample))
+		run_information = plot_plasmid(plasmid_histogram_path, meta_info)
 		
-		make_trans_dist_plot(unique_reads_path, run_information)
+		#make_trans_dist_plot(unique_reads_path, run_information)
 		
 main()

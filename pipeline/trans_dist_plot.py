@@ -202,8 +202,7 @@ def make_trans_dist_plot(fastaFile, run_information):
 
     # map spacer to refseq and determine query window
     code = run_information['Sample']
-    qScore = run_information['Qscore Threshold']
-    run_prefix = "{}_Q{}".format(code, qScore)
+    run_prefix = run_information['run_prefix']
     genome_path = run_information['Genome fasta file']
     genome_length = len(SeqIO.read(Path(genome_path), 'fasta'))
     desc = run_information['Information for graphs']
