@@ -40,6 +40,7 @@ transposon_site_duplication_length = 5
 # For all graphs, use the following filetype and dpi
 plots_filetype = 'png'
 plots_dpi = 600
+fig_size_inches = [8.9, 3.1]
 
 # Bin size for genome-wide plots in base pairs
 genome_bin_size = 5000
