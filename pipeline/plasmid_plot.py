@@ -9,7 +9,7 @@ from Bio import SeqIO
 import heapq
 import time
 
-from parameters import info_file, genome_bin_size, low_reads_cap_percent, plots_filetype, plots_dpi
+from parameters import info_file, plots_filetype, plots_dpi
 from .utils import output_path, get_log_entry
 
 ####
@@ -26,21 +26,25 @@ plt.rcParams['font.family'] = "sans-serif"
 
 plt.ioff()
 
-def get_bins(filename, genome_length, bin_size):
+plasmid_bin_size = 20
+xtick_increment = 1000
+
+
+def get_bins(filename, genome_length):
     csv = np.genfromtxt(filename, delimiter=",", skip_header=1)
-    number_of_bins = (genome_length // bin_size) + 1
+    number_of_bins = (genome_length // plasmid_bin_size) + 1
     bin_numbers = np.array(range(1, number_of_bins + 1))
     bin_values = []
     for i in bin_numbers:
-        min_val = (i - 1) * bin_size
-        max_val = i * bin_size
+        min_val = (i - 1) * plasmid_bin_size
+        max_val = i * plasmid_bin_size
         counts_in_bin = [entry[1] for entry in csv if min_val <= entry[0] < max_val]
         total_for_bin = sum(counts_in_bin)
         bin_values.append(total_for_bin)
     np_bin_values = np.asarray(bin_values)
     return bin_numbers, np_bin_values
 
-def setup_axes(axs, max_x, max_y, genome_length, bin_size):
+def setup_axes(axs, max_x, max_y, genome_length):
     axs.spines['top'].set_visible(False)
     axs.spines['right'].set_visible(False)
     axs.spines['bottom'].set_position('zero')
@@ -56,17 +60,12 @@ def setup_axes(axs, max_x, max_y, genome_length, bin_size):
     axs.yaxis.set_label_coords(-0.02, 0.5)
 
     # set up xticks
-    increments = [1000, 2000, 5000, 10000, 20000, 50000, 100000, 200000, 500000, 1000000, 2000000, 5000000, 10000000]
-    i = 0
-    increment = increments[0]
-    while genome_length // increment > 10:
-        i += 1
-        increment = increments[i]
     
-    x_axis_size = int(genome_length / bin_size)
+    
+    x_axis_size = int(genome_length / plasmid_bin_size)+1
 
-    axs.set_xticks(range(0, x_axis_size, int(increment / bin_size)))
-    axs.set_xticklabels(np.arange(0, genome_length / 1000000, increment / 1000000))
+    axs.set_xticks(range(0, x_axis_size, int(xtick_increment / plasmid_bin_size)))
+    axs.set_xticklabels(range(0, int(genome_length / xtick_increment)+1))
 
     # set limits of graph area - different from spine limits
     # leave extra space on top for info text, and space on bottom for the spacer marker
@@ -87,24 +86,18 @@ def plot_binned(filepath, run_information, yAxis_type, isPlasmid=False):
     exp_date = run_information['Experiment date']
     spacer_locations = [int(loc) for loc in run_information['End of protospacer'].split()]
 
-    genome_path = run_information['Genome fasta file']
-    if isPlasmid:
-        genome_path = run_information['Plasmid fasta file']
+    genome_path = run_information['Plasmid fasta file']
     genome_length = len(SeqIO.read(Path(genome_path), 'fasta'))
         
-    bin_scale = int(100000/genome_bin_size)
-    bin_size = genome_bin_size
-    if isPlasmid:
-        bin_scale = int(genome_length // 200)
-        bin_size = 100
+    bin_scale = int(genome_length // 500)
     
     # determine which bin the spacer lies in
     spacer_bins = []
     if not isPlasmid:
-        spacer_bins = [int(spacer_location / bin_size) + 0.5 for spacer_location in spacer_locations]
+        spacer_bins = [int(spacer_location / plasmid_bin_size) + 0.5 for spacer_location in spacer_locations]
 
     # get bins and counts for the histogram
-    b, a2 = get_bins(filepath, genome_length, bin_size)
+    b, a2 = get_bins(filepath, genome_length)
 
     total_reads = int(sum(a2))
 
@@ -112,11 +105,7 @@ def plot_binned(filepath, run_information, yAxis_type, isPlasmid=False):
 
     # For normalized and zoomed graphs, normalized based on total reads as a percentage
     max_y = max_y_label = None
-    if yAxis_type == 'zoomed':
-        max_y = total_reads * low_reads_cap_percent * 0.01
-        max_y_label = low_reads_cap_percent
-        a2 = np.fmin(a2, max_y)
-    elif yAxis_type == 'normalized':
+    if yAxis_type == 'normalized':
         max_y = 100
         max_y_label = '100%'
         a2 = (100*a2)/total_reads
@@ -128,7 +117,7 @@ def plot_binned(filepath, run_information, yAxis_type, isPlasmid=False):
 
     # set up figure
     fig, axs = plt.subplots(1, 1, tight_layout=True)
-    setup_axes(axs, max_x, max_y, genome_length, bin_size)
+    setup_axes(axs, max_x, max_y, genome_length)
     
     # 2 ticks on the y axis, one at 0 and on at max value of y (max reads)
     axs.set_yticks([0, max_y])
@@ -154,19 +143,17 @@ def plot_binned(filepath, run_information, yAxis_type, isPlasmid=False):
 
     # save figure
     run_prefix = run_information['run_prefix']
-    graph_name = "plasmid" if isPlasmid else "genome"
+    graph_name = "plasmid"
     plt.savefig(output_path(os.path.join('plots', '{}_{}_hist_{}.{}'.format(run_prefix, graph_name, yAxis_type, plots_filetype))), dpi=plots_dpi)
     plt.close()  # closes the matplotlib preview popup window
 
-def make_genome_plots(csvFile, meta_info, isPlasmid=False):
+def plot_plasmid(csvFile, meta_info):
     start = time.perf_counter()
-    graph_name = "plasmid" if isPlasmid else "genome"
-    print("Making {} mapping histograms...".format(graph_name))
+    print("Making plasmid mapping histograms...")
 
     print("Got the meta information about this run, creating the genome-mapping histograms...")
-    plot_binned(csvFile, meta_info, 'raw', isPlasmid)
-    plot_binned(csvFile, meta_info, 'normalized', isPlasmid)
-    plot_binned(csvFile, meta_info, 'zoomed', isPlasmid)
+    plot_binned(csvFile, meta_info, 'raw')
+    plot_binned(csvFile, meta_info, 'normalized')
     elapsed_time = round(time.perf_counter() - start, 2)
-    print("Finished {} mapping plotting in {} seconds".format(graph_name, elapsed_time))
+    print("Finished plasmid mapping plotting in {} seconds".format(elapsed_time))
     return meta_info

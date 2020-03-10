@@ -5,6 +5,7 @@ from Bio.SeqRecord import SeqRecord
 from pathlib import Path
 import pandas as pd
 import sys
+import csv
 import multiprocessing
 import shutil
 import numpy as np
@@ -13,70 +14,143 @@ import platform
 import time
 
 from .utils import inter_path, output_path
-from parameters import delete_intermediates, genome_path, fingerprint_length as map_length, transposon_site_duplication_length as TSD
+from parameters import fingerprint_length as map_length, transposon_site_duplication_length as TSD
 
-# Unique parameters for this file
-donor_fp = "TGCTGAAACCTCAGGCA"
-spike_fp = "ATGATTACGCCAAGCTT"
+def find_alignments(read_sequences_fasta, genome_fasta, output_filename):
+    print("Find alignments for {}".format(output_filename))
 
+    genome_fasta_path = Path(genome_fasta)
+    if not genome_fasta_path.exists():
+        print("Source sequence file not found at {}".format(genome_fasta))
+    if not Path(read_sequences_fasta).exists():
+        print("Read sequences file not found at {}".format(read_sequences_fasta))
 
-def run_alignment(fingerprinted_path, run_prefix, meta_info):
+    cores = multiprocessing.cpu_count()
+    cores_to_use = max(1, cores-1)
+    bowtie_indexes_path = Path(inter_path("genomes/{}".format(genome_fasta_path.stem)))
+    os.makedirs(bowtie_indexes_path.parent.resolve(), exist_ok=True)
+    
+    build_command = 'bowtie2-build {} {} -q'.format(genome_fasta_path.resolve(), bowtie_indexes_path)
+    subprocess.run(build_command, shell=True)
+
+    output_alignment_results = inter_path("{}_bwt2_full.sam".format(output_filename))
+    align_command = 'bowtie2 -x {} -t -f {} -S {} -p {} -a --quiet'.format(bowtie_indexes_path, read_sequences_fasta, output_alignment_results, cores_to_use)
+    subprocess.run(align_command, shell=True)
+
+    # Use files with the awk because windows is crazy
+    # about escaping characters in shell commands
+    no_matches_cmd_path = Path('./awk_commands/no_matches')
+    matches_cmd_path = Path('./awk_commands/yes_matches')
+
+    matches_output_path = inter_path("{}_bwt2_matches.sam".format(output_filename))
+    no_matches_output_path = inter_path("{}_bwt2_no_matches.sam".format(output_filename))
+    make_matches_command = '''awk -f {} {} > {}'''.format(matches_cmd_path, output_alignment_results, matches_output_path)
+    make_no_matches_command = '''awk -f {} {} > {}'''.format(no_matches_cmd_path, output_alignment_results, no_matches_output_path)
+    subprocess.run(make_matches_command, shell=True)
+    subprocess.run(make_no_matches_command, shell=True)
+    return
+
+def sam_to_fasta(sam_path, fasta_path):
+    with open(sam_path, 'r') as sam_file_handler:
+        with open(fasta_path, 'w') as output_fasta:
+            reader = csv.reader(sam_file_handler, delimiter="\t")
+            writer = csv.writer(output_fasta)
+            for row in reader:
+                output_fasta.write('>{}\n{}\n'.format(row[0], row[9]))
+    return
+
+def run_alignment(fingerprinted_path, meta_info):
     print("Running alignment mapping...")
     start = time.perf_counter()
-    output_no_mismatch_sam = inter_path("{}_bwt2_no_mismatches_full.sam".format(run_prefix))
-    output_mismatch_sam = inter_path("{}_bwt2_mismatches_full.sam".format(run_prefix))
 
-    if not Path(output_no_mismatch_sam).exists() or not Path(output_mismatch_sam).exists():
-        print("Finding genome alignments...")
-        genome_file = Path(genome_path)
-        # First have bowtie build and index the genome if it hasn't yet
-        if not genome_file.exists():
-            raise ValueError("Genome file can't be found at {}".format(file))
+    genome_file_path = Path(meta_info['Genome fasta file'])
+    plasmid_file_path = Path(meta_info['Plasmid fasta file'])
 
-        cores = multiprocessing.cpu_count()
-        cores_to_use = max(1, cores-1)
+    genome_reads = inter_path("{}_genome_bwt2_matches.sam").format(meta_info['Sample'])
+    genome_no_reads = inter_path("{}_genome_bwt2_no_matches.sam").format(meta_info['Sample'])
+    hist_results = ''
+    if not Path(genome_reads).exists() or True:
+        if genome_file_path.exists():
+            find_alignments(fingerprinted_path, meta_info['Genome fasta file'], '{}_genome'.format(meta_info['Sample']))
+            hist_results = correct_output_reads(genome_reads, genome_no_reads, meta_info, '{}_genome'.format(meta_info['Sample']))
+        else:
+            print("No genome fasta provided in the info csv, skipping genome alignment")
 
-        bowtie_indexes_path = Path(inter_path("genomes/{}".format(genome_file.stem)))
-        os.makedirs(bowtie_indexes_path.parent.resolve(), exist_ok=True)
-        
-        build_command = 'bowtie2-build {} {} -q'.format(genome_file.resolve(), bowtie_indexes_path)
-        subprocess.run(build_command, shell=True)
-
-        output_full_sam = inter_path("{}_bwt2_full.sam".format(run_prefix))
-        align_command = 'bowtie2 -x {} -t -f {} -S {} -p {} -a --quiet'.format(bowtie_indexes_path, fingerprinted_path, output_full_sam, cores_to_use)
-        subprocess.run(align_command, shell=True)
-        
-        # Use files with the awk because windows is crazy
-        # about escaping characters in shell commands
-        no_matches_path = Path('./awk_commands/no_matches')
-        matches_path = Path('./awk_commands/yes_matches')
-        make_matches_command = '''awk -f {} {} > {}'''.format(matches_path, output_full_sam, output_no_mismatch_sam)
-        make_no_matches_command = '''awk -f {} {} > {}'''.format(no_matches_path, output_full_sam, output_mismatch_sam)
-        subprocess.run(make_matches_command, shell=True)
-        subprocess.run(make_no_matches_command, shell=True)       
-
-    print("Generating the histogram data...")
-    hist_results = correct_output_reads(output_no_mismatch_sam, output_mismatch_sam, meta_info, run_prefix)
     elapsed_time = round(time.perf_counter() - start, 2)
-    print("Finished doing genome mapping and generating histogram data in {} seconds".format(elapsed_time))
-    if delete_intermediates:
-        os.remove(fingerprinted_path)
-        os.remove(output_mismatch_sam)
-        os.remove(output_no_mismatch_sam)
-        shutil.rmtree(bowtie_indexes_path.parent.resolve())
-        os.remove(output_full_sam)
+    print("Genome histogram data exists ({} seconds)".format(elapsed_time))
+
+    # Turn genome_no_reads sam file to fasta format to run against the plasmid
+    genome_no_reads_fasta = inter_path("{}.fasta".format(Path(genome_no_reads).stem))
+    sam_to_fasta(genome_no_reads, genome_no_reads_fasta)
+
+    plasmid_reads = inter_path("{}_plasmid_bwt2_matches.sam").format(meta_info['Sample'])
+    plasmid_no_reads = inter_path("{}_plasmid_bwt2_no_matches.sam").format(meta_info['Sample'])
+    if not Path(plasmid_reads).exists() or True:
+        if plasmid_file_path.exists():
+            find_alignments(genome_no_reads_fasta, meta_info['Plasmid fasta file'], '{}_plasmid'.format(meta_info['Sample']))
+            correct_output_reads(plasmid_reads, plasmid_no_reads, meta_info, '{}_plasmid'.format(meta_info['Sample']))
+        else:
+            print("No plasmid fasta provided in the csv, skipping plasmid alignment")
+    
+    elapsed_time = round(time.perf_counter() - start, 2)
+    print("Plasmid histogram data exists ({} seconds)".format(elapsed_time))
+
     return hist_results
 
-def correct_output_reads(matches_sam, no_matches_sam, meta_info, run_prefix):
-    SAM_full = pd.read_csv(matches_sam,sep="\t",usecols=[0,1,2,3,4,9,11,12,13,15,16,17],header=None)
-    col_names = "read_number, flag_sum, ref_genome, ref_genome_coordinate, mapq, read_sequence, AS, XN, XM, XG, NM, MD".split(", ")
-    SAM_full.columns = col_names
+def sam_to_chunks(csv_file):
+    chunks = pd.read_csv(csv_file,sep="\t",usecols=[0,1,2,3,4,9,11,12,13,15,16,17],header=None, chunksize=1000000)
+    return chunks
 
-    unique_read_numbers = SAM_full.read_number.value_counts()[SAM_full.read_number.value_counts() == 1]
-    unique_reads = SAM_full[SAM_full.read_number.isin(list(unique_read_numbers.index))]
-    non_unique_reads = SAM_full[np.logical_not(SAM_full.read_number.isin(unique_read_numbers.index))]
+def correct_reads(matches_sam, output_name):
+    '''
+    # dictionary parsing reads
+    reads = {}
+    with sam_file_handler as open(matches_sam, 'r'):
+        reader = csv.reader(sam_file_handler, delimited="\t")
+        for row in reader:
+            read_number = row[0]
+            coordinate = row[3]
+            flag_sum = row[2]
+            if flag_sum == 0:
+                direction = 'LR'
+                corrected_coor = coordinate + map_length
+            else:
+                direction = 'RL'
+                corrected_coor = coordinate + TSD
+            min_obj = {'coord': corrected_coor, 'direction': direction}
+            
+            if reads[read_number]:
+                reads.read_number.push(min_obj)
+            else:
+                reads = [min_obj]
+
+    unique_reads = [read for read in reads if read.length == 1]
+    non_unique_reads = [read fo]
+    '''
+    col_names = "read_number, flag_sum, ref_genome, ref_genome_coordinate, mapq, read_sequence, AS, XN, XM, XG, NM, MD".split(", ")
+    
+    SAM_full = sam_to_chunks(matches_sam)
+    unique_read_numbers = []
+    for chunk in SAM_full:
+        chunk.columns = col_names
+        chunk_unique_read_numbers = chunk.read_number.value_counts()[chunk.read_number.value_counts() == 1]
+        unique_read_numbers += list(chunk_unique_read_numbers.index)
+
+        if len(set(unique_read_numbers)) != len(unique_read_numbers):
+            print("Annoying, there was a duplicate between chunks, finding and liminating it now...")
+            unique_read_numbers = [num for num in unique_read_numbers if unique_read_numbers.count(num) == 1]
+
+    unique_reads = pd.DataFrame(columns=col_names)
+    non_unique_reads = pd.DataFrame(columns=col_names)
+    for chunk in sam_to_chunks(matches_sam):
+        chunk.columns = col_names
+        chunk_unique_reads = chunk[chunk.read_number.isin(unique_read_numbers)]
+        unique_reads = unique_reads.append(chunk_unique_reads)
+        chunk_non_unique_reads = chunk[np.logical_not(chunk.read_number.isin(unique_read_numbers))]
+        non_unique_reads = non_unique_reads.append(chunk_unique_reads)
 
     #Get the corrected integration coordinate
+
     histogram = unique_reads[['read_number','flag_sum','ref_genome_coordinate','read_sequence']]
 
     corrected_coor = []
@@ -86,21 +160,24 @@ def correct_output_reads(matches_sam, no_matches_sam, meta_info, run_prefix):
         else:
             corrected_coor.append(i + TSD)
 
-    histogram['corrected_coor'] = corrected_coor
-
+    histogram = histogram.assign(corrected_coor=corrected_coor)
     counts = histogram.corrected_coor.value_counts().sort_index(0)
     counts.index.name = 'position'
     # Increment to make the counts all the exact same as original analysis
     # Presumably because the old script was 1-indexing and bowtie is 0-indexing
     counts.index += 1
     
-    hist_path = output_path("{}_genome_read_locations.csv".format(run_prefix))
+    hist_path = output_path("{}_read_locations.csv".format(output_name))
     counts.to_csv(hist_path)
+    return [histogram, unique_reads, non_unique_reads]
     
-    
-    
-    genome_length = len(SeqIO.read(Path(genome_path).resolve(), 'fasta').seq)
 
+def correct_output_reads(matches_sam, no_matches_sam, meta_info, output_name):
+    donor_fp = meta_info['Donor sequence']
+    spike_fp = meta_info['Spike in sequence']
+
+    histogram, unique_reads, non_unique_reads = correct_reads(matches_sam, output_name)
+    
     fasta_sequence = []
     for i,j,k in zip(histogram.read_number,histogram.read_sequence,histogram.flag_sum):
         if k !=0:
@@ -109,7 +186,7 @@ def correct_output_reads(matches_sam, no_matches_sam, meta_info, run_prefix):
             fasta_sequence.append(">%s"%(i) + "\n" + j)
 
     fasta_file = "\n".join(fasta_sequence)
-    fasta_path = output_path("{}_unique_reads.fasta".format(run_prefix))
+    fasta_path = output_path("{}_unique_reads.fasta".format(meta_info['run_prefix']))
     with open(fasta_path, 'w', newline='') as file:
         file.write(fasta_file)
 
@@ -137,10 +214,12 @@ def correct_output_reads(matches_sam, no_matches_sam, meta_info, run_prefix):
 
     unique_reads_seq_count = len(unique_reads.read_number.unique())
     non_unique_reads_seq_count = len(non_unique_reads.read_number.unique())
-    return {
+    output = {
         'Unique Genome-Mapping Reads': unique_reads_seq_count,
         'Total Genome-Mapping Reads': non_unique_reads_seq_count + unique_reads_seq_count,
         'Undigested Donor Reads': donor_matches,
         'Spike-in Reads': spike_matches,
         'CRISPR Array Self-Targeting Reads': cripsr_seq_matches
     }
+    print(output)
+    return output

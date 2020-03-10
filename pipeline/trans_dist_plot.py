@@ -9,7 +9,7 @@ import heapq
 import matplotlib.pyplot as plt
 import time
 
-from parameters import genome_path, query_length, on_target_window, plots_filetype, plots_dpi
+from parameters import query_length, on_target_window, plots_filetype, plots_dpi
 from .utils import output_path
 
 from types import SimpleNamespace
@@ -202,8 +202,8 @@ def make_trans_dist_plot(fastaFile, run_information):
 
     # map spacer to refseq and determine query window
     code = run_information['Sample']
-    qScore = run_information['Qscore Threshold']
-    run_prefix = "{}_Q{}".format(code, qScore)
+    run_prefix = run_information['run_prefix']
+    genome_path = run_information['Genome fasta file']
     genome_length = len(SeqIO.read(Path(genome_path), 'fasta'))
     desc = run_information['Information for graphs']
     psl = run_information['pCascade #']
