@@ -200,7 +200,8 @@ def correct_output_reads(matches_sam, no_matches_sam, meta_info, output_name):
     col_names = "read_number, flag_sum, ref_genome, ref_genome_coordinate, mapq, read_sequence, AS, XN, XM, XG, NM, MD".split(", ")
     no_match_sequences.columns = col_names
 
-    crispr_array_seq = meta_info['CRISPR Array Sequence']
+    crispr_array_seq = Seq(meta_info['CRISPR Array Sequence']).upper()
+    crispr_array_seq_rc = crispr_array_seq.reverse_complement()
     donor_matches = 0
     spike_matches = 0
     cripsr_seq_matches = 0
@@ -209,7 +210,7 @@ def correct_output_reads(matches_sam, no_matches_sam, meta_info, output_name):
             donor_matches += 1
         elif read_seq == spike_fp:
             spike_matches += 1
-        elif crispr_array_seq and read_seq in crispr_array_seq:
+        elif crispr_array_seq and (read_seq in crispr_array_seq or read_seq in crispr_array_seq_rc):
             cripsr_seq_matches += 1
 
     unique_reads_seq_count = len(unique_reads.read_number.unique())
