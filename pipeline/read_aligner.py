@@ -97,6 +97,10 @@ def run_alignment(fingerprinted_path, meta_info):
 
     return hist_results
 
+def sam_to_chunks(csv_file):
+    chunks = pd.read_csv(csv_file,sep="\t",usecols=[0,1,2,3,4,9,11,12,13,15,16,17],header=None, chunksize=1000000)
+    return chunks
+
 def correct_reads(matches_sam, output_name):
     '''
     # dictionary parsing reads
@@ -123,16 +127,33 @@ def correct_reads(matches_sam, output_name):
     unique_reads = [read for read in reads if read.length == 1]
     non_unique_reads = [read fo]
     '''
-
-    SAM_full = pd.read_csv(matches_sam,sep="\t",usecols=[0,1,2,3,4,9,11,12,13,15,16,17],header=None)
     col_names = "read_number, flag_sum, ref_genome, ref_genome_coordinate, mapq, read_sequence, AS, XN, XM, XG, NM, MD".split(", ")
-    SAM_full.columns = col_names
+    
+    SAM_full = sam_to_chunks(matches_sam)
+    unique_read_numbers = []
+    for chunk in SAM_full:
+        chunk.columns = col_names
+        chunk_unique_read_numbers = chunk.read_number.value_counts()[chunk.read_number.value_counts() == 1]
+        unique_read_numbers += list(chunk_unique_read_numbers.index)
 
-    unique_read_numbers = SAM_full.read_number.value_counts()[SAM_full.read_number.value_counts() == 1]
-    unique_reads = SAM_full[SAM_full.read_number.isin(list(unique_read_numbers.index))]
-    non_unique_reads = SAM_full[np.logical_not(SAM_full.read_number.isin(unique_read_numbers.index))]
+        if len(set(unique_read_numbers)) != len(unique_read_numbers):
+            print("Annoying, there was a duplicate between chunks, finding and liminating it now...")
+            unique_read_numbers = [num for num in unique_read_numbers if unique_read_numbers.count(num) == 1]
+
+    unique_reads = pd.DataFrame(columns=col_names)
+    non_unique_reads = pd.DataFrame(columns=col_names)
+    for chunk in sam_to_chunks(matches_sam):
+        chunk.columns = col_names
+        print(chunk)
+        chunk_unique_reads = chunk[chunk.read_number.isin(unique_read_numbers)]
+        print(chunk_unique_reads)
+        unique_reads = unique_reads.append(chunk_unique_reads)
+        print(unique_reads)
+        chunk_non_unique_reads = chunk[np.logical_not(chunk.read_number.isin(unique_read_numbers))]
+        non_unique_reads = non_unique_reads.append(chunk_unique_reads)
 
     #Get the corrected integration coordinate
+
     histogram = unique_reads[['read_number','flag_sum','ref_genome_coordinate','read_sequence']]
 
     corrected_coor = []
@@ -142,8 +163,7 @@ def correct_reads(matches_sam, output_name):
         else:
             corrected_coor.append(i + TSD)
 
-    histogram['corrected_coor'] = corrected_coor
-
+    histogram = histogram.assign(corrected_coor=corrected_coor)
     counts = histogram.corrected_coor.value_counts().sort_index(0)
     counts.index.name = 'position'
     # Increment to make the counts all the exact same as original analysis
