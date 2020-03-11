@@ -80,6 +80,6 @@ def main():
 
 		run_information = plot_plasmid(plasmid_histogram_path, meta_info)
 		
-		#make_trans_dist_plot(unique_reads_path, run_information)
+		make_trans_dist_plot(unique_reads_path, run_information)
 		
 main()
