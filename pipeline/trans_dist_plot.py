@@ -259,7 +259,6 @@ def make_trans_dist_plot(fastaFile, run_information):
     for x, y in enumerate(out_tally_all):
         if y == max(out_tally_all):
             main_site = x + spacer_end  # remember to convert dist to site of integration
-
     # define on target window
     on_target_lower = main_site - int(on_target_window/2)
     on_target_upper = main_site + int(on_target_window/2)

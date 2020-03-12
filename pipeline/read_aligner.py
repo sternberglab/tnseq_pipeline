@@ -66,13 +66,13 @@ def run_alignment(fingerprinted_path, meta_info):
     genome_file_path = Path(meta_info['Genome fasta file'])
     plasmid_file_path = Path(meta_info['Plasmid fasta file'])
 
-    genome_reads = inter_path("{}_genome_bwt2_matches.sam").format(meta_info['Sample'])
-    genome_no_reads = inter_path("{}_genome_bwt2_no_matches.sam").format(meta_info['Sample'])
+    genome_reads = inter_path("genome_bwt2_matches.sam").format(meta_info['Sample'])
+    genome_no_reads = inter_path("genome_bwt2_no_matches.sam").format(meta_info['Sample'])
     hist_results = ''
     if not Path(genome_reads).exists() or True:
         if genome_file_path.exists():
-            find_alignments(fingerprinted_path, meta_info['Genome fasta file'], '{}_genome'.format(meta_info['Sample']))
-            hist_results = correct_output_reads(genome_reads, genome_no_reads, meta_info, '{}_genome'.format(meta_info['Sample']))
+            find_alignments(fingerprinted_path, meta_info['Genome fasta file'], 'genome')
+            hist_results = correct_output_reads(genome_reads, genome_no_reads, meta_info, 'genome')
         else:
             print("No genome fasta provided in the info csv, skipping genome alignment")
 
@@ -83,12 +83,12 @@ def run_alignment(fingerprinted_path, meta_info):
     genome_no_reads_fasta = inter_path("{}.fasta".format(Path(genome_no_reads).stem))
     sam_to_fasta(genome_no_reads, genome_no_reads_fasta)
 
-    plasmid_reads = inter_path("{}_plasmid_bwt2_matches.sam").format(meta_info['Sample'])
-    plasmid_no_reads = inter_path("{}_plasmid_bwt2_no_matches.sam").format(meta_info['Sample'])
+    plasmid_reads = inter_path("plasmid_bwt2_matches.sam").format(meta_info['Sample'])
+    plasmid_no_reads = inter_path("plasmid_bwt2_no_matches.sam").format(meta_info['Sample'])
     if not Path(plasmid_reads).exists() or True:
         if plasmid_file_path.exists():
-            find_alignments(genome_no_reads_fasta, meta_info['Plasmid fasta file'], '{}_plasmid'.format(meta_info['Sample']))
-            correct_output_reads(plasmid_reads, plasmid_no_reads, meta_info, '{}_plasmid'.format(meta_info['Sample']))
+            find_alignments(genome_no_reads_fasta, meta_info['Plasmid fasta file'], 'plasmid')
+            correct_output_reads(plasmid_reads, plasmid_no_reads, meta_info, 'plasmid')
         else:
             print("No plasmid fasta provided in the csv, skipping plasmid alignment")
     
@@ -154,23 +154,34 @@ def correct_reads(matches_sam, output_name):
     histogram = unique_reads[['read_number','flag_sum','ref_genome_coordinate','read_sequence']]
 
     corrected_coor = []
+    orientation = []
     for i,j in zip(histogram.ref_genome_coordinate, histogram.flag_sum):
         if j == 0:
+            # j=0 means the FP was matched on the forward strand
             corrected_coor.append(i + map_length)
+            orientation.append('LR')
         else:
+            # this means it was matched on the reverse complement
             corrected_coor.append(i + TSD)
+            orientation.append('RL')
 
-    histogram = histogram.assign(corrected_coor=corrected_coor)
+    histogram = histogram.assign(corrected_coor=corrected_coor, orientation=orientation)
+    
+    RL_counts = histogram[histogram.orientation == 'RL'].corrected_coor.value_counts().sort_index(0)
+    LR_counts = histogram[histogram.orientation == 'LR'].corrected_coor.value_counts().sort_index(0)
+    # print("RL", RL_counts)
+    # print("LR", LR_counts)
+
     counts = histogram.corrected_coor.value_counts().sort_index(0)
     counts.index.name = 'position'
-    # Increment to make the counts all the exact same as original analysis
-    # Presumably because the old script was 1-indexing and bowtie is 0-indexing
-    counts.index += 1
+    counts.name = 'reads'
+    # Decrement to make the counts all the exact same as what Biopython sequence.seq.find() would give
+    # Presumably because bowtie is 1-indexing and biopython is 0-indexing
+    counts.index -= 1
     
     hist_path = output_path("{}_read_locations.csv".format(output_name))
     counts.to_csv(hist_path)
     return [histogram, unique_reads, non_unique_reads]
-    
 
 def correct_output_reads(matches_sam, no_matches_sam, meta_info, output_name):
     donor_fp = meta_info['Donor sequence']
@@ -186,7 +197,7 @@ def correct_output_reads(matches_sam, no_matches_sam, meta_info, output_name):
             fasta_sequence.append(">%s"%(i) + "\n" + j)
 
     fasta_file = "\n".join(fasta_sequence)
-    fasta_path = output_path("{}_unique_reads.fasta".format(meta_info['run_prefix']))
+    fasta_path = output_path("{}_unique_reads.fasta".format(output_name))
     with open(fasta_path, 'w', newline='') as file:
         file.write(fasta_file)
 

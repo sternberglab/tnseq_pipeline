@@ -16,7 +16,7 @@ from pipeline.plotting import make_genome_plots
 from pipeline.trans_dist_plot import make_trans_dist_plot
 from pipeline.plasmid_plot import plot_plasmid
 
-from parameters import working_dir, Qscore_threshold, info_file
+from parameters import working_dir, Qscore_threshold, info_file, delete_intermediates
 
 def main():
 	if not Path(info_file).exists():
@@ -51,10 +51,10 @@ def main():
 		meta_info['run_prefix'] = run_prefix
 
 		# Start at the end to avoid repeating steps with saved results
-		histogram_path = output_path("{}_genome_read_locations.csv".format(sample))
-		plasmid_histogram_path = output_path("{}_plasmid_read_locations.csv".format(sample))
+		histogram_path = output_path("genome_read_locations.csv")
+		plasmid_histogram_path = output_path("plasmid_read_locations.csv")
 		
-		unique_reads_path = output_path("{}_unique_reads.fasta".format(run_prefix))
+		unique_reads_path = output_path("genome_unique_reads.fasta")
 		filtered_path = inter_path('{}_FILTERED.fastq'.format(run_prefix))
 		fp_path = inter_path("{}_FINGERPRINTED.fasta".format(run_prefix))
 		if not Path(histogram_path).exists() or not Path(plasmid_histogram_path).exists() or not Path(unique_reads_path).exists():
@@ -76,6 +76,9 @@ def main():
 			log_info.update(alignment_results)
 
 			update_log(log_info)
+			if delete_intermediates:
+				shutil.rmtree(os.path.join(Path(working_dir), 'intermediates', run_prefix))
+
 		run_information = make_genome_plots(histogram_path, meta_info)
 
 		run_information = plot_plasmid(plasmid_histogram_path, meta_info)

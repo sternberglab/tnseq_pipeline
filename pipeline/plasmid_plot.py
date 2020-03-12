@@ -28,7 +28,8 @@ plt.ioff()
 
 plasmid_bin_size = 20
 xtick_increment = 1000
-
+CRISPR_array_spacer = 'GAGACCtctgtcttgtcagctagggtGGTCTC'.upper()
+donor_spacer = 'GCCACCGCTGAGCAATAACTAGCATAACCCCT'.upper()
 
 def get_bins(filename, genome_length):
     csv = np.genfromtxt(filename, delimiter=",", skip_header=1)
@@ -144,8 +145,56 @@ def plot_binned(filepath, run_information, yAxis_type, isPlasmid=False):
     # save figure
     run_prefix = run_information['run_prefix']
     graph_name = "plasmid"
-    plt.savefig(output_path(os.path.join('plots', '{}_{}_hist_{}.{}'.format(run_prefix, graph_name, yAxis_type, plots_filetype))), dpi=plots_dpi)
+    plot_path = output_path(os.path.join('plots', '{}_{}_hist_{}.{}'.format(run_prefix, graph_name, yAxis_type, plots_filetype)))
+    plt.savefig(plot_path, dpi=plots_dpi)
     plt.close()  # closes the matplotlib preview popup window
+
+def plot_section(csvFile, meta_info, spacerSeq, name):
+    genome_path = meta_info['Plasmid fasta file']
+    genome = SeqIO.read(Path(genome_path), 'fasta')
+
+    spacerEnd = genome.seq.upper().find(spacerSeq) + len(spacerSeq)
+
+    reads = []
+    with open(csvFile, encoding='utf-8-sig') as openFile:
+        reader = csv.DictReader(openFile)
+        reads = list(reader)
+    
+    x_axis = list(range(40,61))
+    y_vals = []
+    for i in range(spacerEnd + 40, spacerEnd + 61):
+        match = next((item for item in reads if int(item['position']) == i), None)
+        if match:
+            y_vals.append(int(match['reads']))
+        else:
+            y_vals.append(0)
+
+    max_y = max(y_vals)
+
+    fig, axs = plt.subplots(1, 1, tight_layout=True)
+    # Blue with no border for total numbers
+    axs.bar(x_axis, y_vals, color='#83B0DD', edgecolor='#83B0DD', linewidth=1.0, width=1.01, zorder=0)
+
+    axs.spines['top'].set_visible(False)
+    axs.spines['right'].set_visible(False)
+    # ax.spines['bottom'].set_visible(False)
+    # axs.spines['left'].set_visible(False)
+    axs.spines['bottom'].set_position('zero')
+    axs.spines['left'].set_bounds(0, max_y)
+    axs.set_xticks([40, 42, 45, 50, 55, 60])
+    axs.set_xticklabels([40, 0, 45, 50, 55, 60])
+    axs.set_yticks([0, max_y])
+    axs.set_yticklabels([0, max_y])
+    axs.set_xlim(left=42, right=58) ## Change window here
+    axs.set_ylim(bottom=0, top=1.25 * (max_y))
+    axs.set(xlabel="Distance from target site (bp)", ylabel="Read count")
+    axs.yaxis.set_label_coords(-0.05, 0.4)
+
+    fig.set_size_inches(5, 4.2)
+    plot_path = output_path(os.path.join('plots', '{}_plasmid_dist_{}.{}'.format(meta_info['Sample'], name, plots_filetype)))
+    plt.savefig(plot_path, dpi=plots_dpi)
+    plt.close()
+
 
 def plot_plasmid(csvFile, meta_info):
     start = time.perf_counter()
@@ -154,6 +203,9 @@ def plot_plasmid(csvFile, meta_info):
     print("Got the meta information about this run, creating the genome-mapping histograms...")
     plot_binned(csvFile, meta_info, 'raw')
     plot_binned(csvFile, meta_info, 'normalized')
+    # plot sections for the crispr array region and donor region
+    plot_section(csvFile, meta_info, CRISPR_array_spacer, "CRISPR_seq")
+    plot_section(csvFile, meta_info, donor_spacer, "donor")
     elapsed_time = round(time.perf_counter() - start, 2)
     print("Finished plasmid mapping plotting in {} seconds".format(elapsed_time))
     return meta_info
