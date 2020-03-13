@@ -22,6 +22,10 @@ off_target1 = 15125
 on_target2 = 9854
 off_target2 = 12390
 
+# To adjust the plotting window, change the 'axs.set_xlim' parameters for right and left
+xlim_left = 28
+xlim_right = 52
+
 def make_trans_dist_plot():
     run_prefix = Path(csvFile).stem.split('_')[0]
 
@@ -44,7 +48,8 @@ def make_trans_dist_plot():
     on_target_perc = round(100*(on_target1+on_target2)/(on_target1+on_target2+off_target1+off_target2), 2)
     bias = round(sum(out_tally_rl)/sum(out_tally_lr), 2)
 
-    xticks = range(20,61,5)
+    xticks = range(0,61,5)
+
     for overlap in [True, False]:
         if overlap:
             fig, axs = plt.subplots(1, 1, tight_layout=True)
@@ -67,7 +72,7 @@ def make_trans_dist_plot():
             axs.set_xticklabels(xticks)
             axs.set_yticks([0, max_y])
             axs.set_yticklabels([0, max_y])
-            axs.set_xlim(left=28, right=52) ## Change window here
+            axs.set_xlim(left=xlim_left, right=xlim_right) ## Change window here
             axs.set_ylim(bottom=0, top=1.25 * (max_y))
             axs.set(xlabel="Distance from target site (bp)", ylabel="Read count")
             axs.yaxis.set_label_coords(-0.05, 0.4)
@@ -99,7 +104,7 @@ def make_trans_dist_plot():
                 axs.set_xticklabels(xticks)
                 axs.set_yticks([0, max_y])
                 axs.set_yticklabels([0, max_y])
-                axs.set_xlim(left=28, right=52) ## Change window here
+                axs.set_xlim(left=xlim_left, right=xlim_right) ## Change window here
                 axs.set_ylim(bottom=0, top=1.05*(max_y))
                 axs.set(xlabel="Distance from target site (bp)", ylabel="Read count")
                 axs.yaxis.set_label_coords(-0.1,0.5)
