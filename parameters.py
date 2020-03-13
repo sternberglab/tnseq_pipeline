@@ -38,7 +38,7 @@ transposon_site_duplication_length = 5
 
 # 4. GRAPHS
 # For all graphs, use the following filetype and dpi
-plots_filetype = 'png'
+plots_filetype = 'svg'
 plots_dpi = 600
 fig_size_inches = [8.9, 3.1]
 
