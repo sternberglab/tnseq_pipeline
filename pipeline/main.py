@@ -44,8 +44,7 @@ def main(info_file, genome, system):
 
 		log_info = {'Sample': sample, 'Qscore Threshold': str(Qscore_threshold)}
 
-		run_prefix = "{}_Q{}".format(sample, Qscore_threshold)
-		meta_info['run_prefix'] = run_prefix
+		meta_info['run_prefix'] = sample
 
 		# Start at the end to avoid repeating steps with saved results
 		histogram_path = output_path("genome_read_locations.csv")

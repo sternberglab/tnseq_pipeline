@@ -12,7 +12,7 @@ outputs_dir = ''
 def setup_paths(code, Qscore):
 	global intermediates_dir
 	global outputs_dir
-	repo_dir = Path(__file__).parent.absolute()
+	repo_dir = Path(__file__).parent.parent.absolute()
 	intermediates_dir = os.path.join(repo_dir, 'intermediates', code)
 	outputs_dir = os.path.join(repo_dir, 'outputs')
 	os.makedirs(intermediates_dir, exist_ok=True)
@@ -47,7 +47,7 @@ def update_log(data):
 
 	data['Analysis Date'] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
-	log_path = os.path.join(outputs_dir, '..', 'output_log.csv')
+	log_path = os.path.join(outputs_dir, 'output_log.csv')
 	if not Path(log_path).exists():
 		with open(log_path, 'w') as csvfile:
 			writer = csv.DictWriter(csvfile, fieldnames=log_fieldnames)
