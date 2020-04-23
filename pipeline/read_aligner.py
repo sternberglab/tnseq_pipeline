@@ -69,7 +69,7 @@ def run_alignment(fingerprinted_path, meta_info):
     genome_reads = inter_path("genome_bwt2_matches.sam").format(meta_info['Sample'])
     genome_no_reads = inter_path("genome_bwt2_no_matches.sam").format(meta_info['Sample'])
     hist_results = ''
-    if not Path(genome_reads).exists() or True:
+    if not Path(genome_reads).exists():
         if genome_file_path.exists():
             find_alignments(fingerprinted_path, meta_info['Genome fasta file'], 'genome')
             hist_results = correct_output_reads(genome_reads, genome_no_reads, meta_info, 'genome')
@@ -86,7 +86,7 @@ def run_alignment(fingerprinted_path, meta_info):
     if len(meta_info['Plasmid fasta file']) > 1:
         plasmid_reads = inter_path("plasmid_bwt2_matches.sam").format(meta_info['Sample'])
         plasmid_no_reads = inter_path("plasmid_bwt2_no_matches.sam").format(meta_info['Sample'])
-        if not Path(plasmid_reads).exists() or True:
+        if not Path(plasmid_reads).exists():
             if plasmid_file_path.exists():
                 find_alignments(genome_no_reads_fasta, meta_info['Plasmid fasta file'], 'plasmid')
                 correct_output_reads(plasmid_reads, plasmid_no_reads, meta_info, 'plasmid')
@@ -160,28 +160,31 @@ def correct_reads(matches_sam, output_name):
         if j == 0:
             # j=0 means the FP was matched on the forward strand
             corrected_coor.append(i + map_length)
-            orientation.append('LR')
+            orientation.append('RL')
         else:
             # this means it was matched on the reverse complement
             corrected_coor.append(i + TSD)
-            orientation.append('RL')
+            orientation.append('LR')
 
     histogram = histogram.assign(corrected_coor=corrected_coor, orientation=orientation)
     
     RL_counts = histogram[histogram.orientation == 'RL'].corrected_coor.value_counts().sort_index(0)
     LR_counts = histogram[histogram.orientation == 'LR'].corrected_coor.value_counts().sort_index(0)
-    # print("RL", RL_counts)
-    # print("LR", LR_counts)
+    totals = histogram.corrected_coor.value_counts().sort_index(0)
+    RL_counts.name = "RL"
+    LR_counts.name = "LR"
+    totals.name = 'reads'
 
-    counts = histogram.corrected_coor.value_counts().sort_index(0)
-    counts.index.name = 'position'
-    counts.name = 'reads'
     # Decrement to make the counts all the exact same as what Biopython sequence.seq.find() would give
     # Presumably because bowtie is 1-indexing and biopython is 0-indexing
-    counts.index -= 1
+    combine = pd.concat([totals, RL_counts, LR_counts], axis=1)
+    combine.index.name = "position"
+    combine.index -= 1
+    combine["RL"] = combine["RL"].fillna(0)
+    combine["LR"] = combine["LR"].fillna(0)
     
     hist_path = output_path("{}_read_locations.csv".format(output_name))
-    counts.to_csv(hist_path)
+    combine.to_csv(hist_path)
     return [histogram, unique_reads, non_unique_reads]
 
 def correct_output_reads(matches_sam, no_matches_sam, meta_info, output_name):

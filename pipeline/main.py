@@ -7,18 +7,18 @@ import shutil
 from Bio import SeqIO
 import itertools
 
-from pipeline.utils import inter_path, update_log, output_path, setup_paths, get_info_for_sample
+from .utils import inter_path, update_log, output_path, setup_paths, get_info_for_sample
 
-from pipeline.read_raw_files import process_files, unzip_files
-from pipeline.fingerprinting import fingerprinting
-from pipeline.read_aligner import run_alignment
-from pipeline.plotting import make_genome_plots
-from pipeline.trans_dist_plot import make_trans_dist_plot
-from pipeline.plasmid_plot import plot_plasmid
+from .read_raw_files import process_files, unzip_files
+from .fingerprinting import fingerprinting
+from .read_aligner import run_alignment
+from .plotting import make_genome_plots
+from .trans_dist_plot import make_trans_dist_plot
+from .plasmid_plot import plot_plasmid
 
 from parameters import working_dir, Qscore_threshold, info_file, delete_intermediates
 
-def main():
+def main(info_file, genome, system):
 	if not Path(info_file).exists():
 		print("Could not find the info file with sample information, see the parameters.py file")
 		return
@@ -33,10 +33,7 @@ def main():
 
 	for sample_info in samples_to_process:
 		sample = sample_info['Sample']
-		meta_info = get_info_for_sample(sample)
-		if not meta_info:
-			print("Sample {} not found in the info file, skipping processing".format(sample))
-			continue
+		meta_info = = sample_info
 
 		print('----------')
 		print('----------')
@@ -58,32 +55,24 @@ def main():
 		filtered_path = inter_path('{}_FILTERED.fastq'.format(run_prefix))
 		fp_path = inter_path("{}_FINGERPRINTED.fasta".format(run_prefix))
 		if not Path(histogram_path).exists() or not Path(plasmid_histogram_path).exists() or not Path(unique_reads_path).exists():
-
 			fp_path = inter_path("{}_FINGERPRINTED.fasta".format(run_prefix))
 			if not Path(fp_path).exists():
-
 				filtered_path = inter_path('{}_FILTERED.fastq'.format(run_prefix))
 				if not Path(filtered_path).exists():
 					raw_files_dir = os.path.join(Path(working_dir), 'raw')
 					filenames = [path.resolve() for path in Path(raw_files_dir).glob(sample + '*.fastq')]
 					process_results = process_files(sample, filenames, filtered_path)
 					log_info.update(process_results)
-				
-				fp_results = fingerprinting(filtered_path, fp_path, meta_info)
+				fp_results = fingerprinting(filtered_path, fp_path)
 				log_info.update(fp_results)
-
 			alignment_results = run_alignment(fp_path, meta_info)
-			log_info.update(alignment_results)
-
 			update_log(log_info)
 			if delete_intermediates:
 				shutil.rmtree(os.path.join(Path(working_dir), 'intermediates', run_prefix))
 
 		run_information = make_genome_plots(histogram_path, meta_info)
 
-		#if len(meta_info['Plasmid fasta file']) > 1:
-		#	run_information = plot_plasmid(plasmid_histogram_path, meta_info)
+		if len(meta_info['Plasmid fasta file']) > 1:
+			run_information = plot_plasmid(plasmid_histogram_path, meta_info)
 		
-		make_trans_dist_plot(histogram_path, unique_reads_path, run_information)
-
-main()
+		make_trans_dist_plot(unique_reads_path, run_information)

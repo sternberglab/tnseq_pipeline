@@ -5,6 +5,7 @@ import xlsxwriter
 from pathlib import Path
 import datetime as dt
 import csv
+import heapq
 import matplotlib.pyplot as plt
 import time
 
@@ -13,7 +14,6 @@ from .utils import output_path
 
 from types import SimpleNamespace
 
-'''
 def create_output_excel(v):
     excel_path = Path(output_path('{}_trans_dist_mmei_output.xlsx'.format(v.run_prefix)))
 
@@ -195,9 +195,8 @@ def create_output_excel(v):
     logsheet.write(5, 5, '{} : 1'.format(round(len(v.final_list_rl)/(len(v.final_list_lr)+0.00000001), 2)))  # in case LR is 0
     log.close()
     return
-'''
 
-def make_trans_dist_plot(readsCsv, fastaFile, run_information):
+def make_trans_dist_plot(fastaFile, run_information):
     print("Doing the transposition distance mapping...")
     start = time.perf_counter()
 
@@ -211,39 +210,78 @@ def make_trans_dist_plot(readsCsv, fastaFile, run_information):
     description = run_information['Description']
     spacer = run_information['Spacer'].upper()
     exp_date = run_information['Experiment date']
-
+    direction = run_information['Target direction']
+    
     genome = SeqIO.read(Path(genome_path), "fasta")
     refseq = genome.seq.upper()
+    if direction.lower() == 'rv':
+        refseq = refseq.reverse_complement()
+
     if refseq.find(spacer) >= 0:
-        spacer_end = refseq.find(spacer) + len(spacer)
-    elif refseq.reverse_complement().find(spacer) >= 0:
-        spacer_end = refseq.find(spacer) + len(spacer)
+        spacer_end = refseq.find(spacer) + 32
+        query = refseq[spacer_end-90:spacer_end+query_length]  # '-90' accounts for the -50bp of the on-target later
+        query_rc = query.reverse_complement()
+        spacer_end = 90  # resets spacer end index to middle of query window (no longer using full refseq)
     else:
         print("ERROR - Spacer not found within RefSeq")
         return
+    total = 0  # counts total reads in fastq file
+    out_list_all = []  # list holding common trans_dist
+    out_list_rl = []  # list holding indv RL trans_dist values
+    out_list_lr = []  # list holding indv LR trans_dist values
+    # these lists are longer than query_length to hold negative values of trans_dist
+    # the output excel cuts of list using query_length so those values will not show
+    out_tally_rl = [0] * (query_length+spacer_end+20)  # list tallying freq of tran_dist for RL
+    out_tally_lr = [0] * (query_length+spacer_end+20)  # list tallying freq of tran_dist for LR
+    example_reads_rl = ['X'] * (query_length+spacer_end+20)  # to hold example reads mapping to each trans_dist for RL
+    example_reads_lr = ['X'] * (query_length+spacer_end+20)  # to hold example reads mapping to each trans_dist for LR
+    for record in SeqIO.parse(fastaFile, Path(fastaFile).suffix[1:]):  # loop through all reads in fastq file
+        total += 1
+        new_seq = record.seq  # artifact from v1 of code
+        if query.find(new_seq) >= 0:  # corresponds to RL
+            trans_dist = query.find(new_seq) + 17 - spacer_end  # distance in bp from end of protospacer
+            out_list_all.append(trans_dist)  # append to holding lists for processing later
+            out_list_rl.append(trans_dist)
+            if out_tally_rl[trans_dist] == 0:  # add read to example list if this is the first occurrence
+                example_reads_rl[trans_dist] = new_seq
+            out_tally_rl[trans_dist] += 1  # count into tally list
+        elif query_rc.find(new_seq) >= 0:  # corresponds to LR
+            trans_dist = len(query) - query_rc.find(new_seq) - 17 + 5 - spacer_end  # dist in bp from end of protospacer
+            out_list_all.append(trans_dist)  # append to tally lists for processing later
+            out_list_lr.append(trans_dist)
+            if out_tally_lr[trans_dist] == 0:  # add read to example list if this is the first occurrence
+                example_reads_lr[trans_dist] = new_seq
+            out_tally_lr[trans_dist] += 1  # count into tally list
+    #  determine most frequent trans_dist
+    out_tally_all = [0] * query_length
+    for i in range(0, len(out_tally_all)):
+        out_tally_all[i] = out_tally_rl[i] + out_tally_lr[i]
+    for x, y in enumerate(out_tally_all):
+        if y == max(out_tally_all):
+            main_site = x + spacer_end  # remember to convert dist to site of integration
+    # define on target window
+    on_target_lower = main_site - int(on_target_window/2)
+    on_target_upper = main_site + int(on_target_window/2)
+    # move any trans_dist within this window into a final holding list and clears old holding list
+    final_list_rl = []
+    for dist in out_list_rl:
+        if on_target_lower <= (dist + spacer_end) <= on_target_upper:  # convert dist to site of integration
+            final_list_rl.append(dist)
 
-    all_reads = []
-    with open(readsCsv, 'r', encoding='utf-8-sig') as f:
-        reader = csv.DictReader(f)
-        all_reads = list([row for row in reader])
+    final_list_lr = []
+    for dist in out_list_lr:
+        if on_target_lower <= (dist + spacer_end) <= on_target_upper:  # convert dist to site of integration
+            final_list_lr.append(dist)
+
+    # determine on target frequency
+    on_target_total = len(final_list_rl) + len(final_list_lr)
+    off_target = total - on_target_total
 
     x_axis = []  # artificial x-axis
     for i in range(20, 61):
         x_axis.append(i)
-    y_rl = []
-    y_lr = []
-    total = sum([int(row["reads"]) for row in all_reads])
-    reads_in_window = [row for row in all_reads if abs(int(row["position"]) - (spacer_end + 50)) < (int(on_target_window) / 2)]
-    for i in range(20, 61):
-        reads = next(iter([row for row in all_reads if int(row["position"]) == spacer_end + i]), None)
-        if reads:
-            y_rl.append(int(float(reads["RL"])))
-            y_lr.append(int(float(reads["LR"])))
-        else:
-            y_rl.append(0)
-            y_lr.append(0)
-    on_target_total = sum([int(row["reads"]) for row in reads_in_window])
-    off_target_reads = total - on_target_total
+    y_rl = out_tally_rl[20:61]
+    y_lr = out_tally_lr[20:61]
 
     max_y = max(max(y_rl), max(y_lr))
 
@@ -252,7 +290,7 @@ def make_trans_dist_plot(readsCsv, fastaFile, run_information):
             fig, axs = plt.subplots(1, 1, tight_layout=True)
             title = fig.suptitle("{} - {} / On-target = {}% / Bias = {} :1".format(
                 code, description, round(100*on_target_total/total, 1),
-                                 round(sum(y_rl)/(sum(y_lr)+0.00000001), 2)))
+                                 round(len(final_list_rl)/(len(final_list_lr)+0.00000001), 2)))
             title.set_y(0.9)
             # LR graph is colorless with a border
             axs.bar(x_axis, y_lr, color='none', edgecolor='#153C6B', linewidth=1.0, width=1.01, zorder=1)
@@ -275,13 +313,13 @@ def make_trans_dist_plot(readsCsv, fastaFile, run_information):
             axs.yaxis.set_label_coords(-0.05, 0.4)
 
             fig.set_size_inches(5, 4.2)
-            plot_name = "{}_trans_dist_hist_overlap_v2.svg".format(run_prefix)
+            plot_name = "{}_trans_dist_hist_overlap.svg".format(run_prefix)
         else:
             fig, axs = plt.subplots(1, 2)
             fig. tight_layout(rect=[0.15, 0.1, 1, 0.9])
             title = fig.suptitle("{} - {}\nOn-target frequency: {}%\nOrientation bias (R->L:L->R): {}:1"
                                  .format(code, description, round(100*on_target_total/total, 1),
-                                 round(sum(y_rl)/(sum(y_lr)+0.00000001), 2)))
+                                 round(len(final_list_rl)/(len(final_list_lr)+0.00000001), 2)))
             title.set_y(0.88)
             # first graph on the left in red
             axs[0].bar(x_axis, y_rl, color='tab:orange', width=1.0)
@@ -309,13 +347,13 @@ def make_trans_dist_plot(readsCsv, fastaFile, run_information):
 
             fig.set_size_inches(6, 4.2)
             fig.subplots_adjust(top=0.65)
-            plot_name = "{}_trans_dist_hist_no_overlap_v2.{}".format(run_prefix, plots_filetype)
+            plot_name = "{}_trans_dist_hist_no_overlap.{}".format(run_prefix, plots_filetype)
         # save the plot and close it
         plt.savefig(output_path(os.path.join('plots', plot_name)), dpi=plots_dpi)
         plt.close()
 
     # Return information to append to the overall output logs for this run (Sample code plus Qscore combo)
-    # create_output_excel(SimpleNamespace(**locals()))
+    #create_output_excel(SimpleNamespace(**locals()))
     elapsed_time = round(time.perf_counter() - start, 2)
     print("Finished transposition distance plotting and output in {} seconds".format(elapsed_time))
     return
