@@ -6,7 +6,7 @@
 delete_intermediates = False
 
 # Path to an info csv file with various information, see the example file for details
-info_file = "./inputs/experiment_info.csv"
+info_file = "./inputs/experiment_info2.csv"
 
 # 1. FOR LOADING NEW DATA
 

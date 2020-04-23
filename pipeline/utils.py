@@ -10,12 +10,13 @@ from parameters import info_file, working_dir
 intermediates_dir = ''
 outputs_dir = ''
 def setup_paths(code, Qscore):
-	folder_name = '{}_Q{}'.format(code, Qscore)
 	global intermediates_dir
 	global outputs_dir
-	intermediates_dir = os.path.join(Path(working_dir), 'intermediates', folder_name)
-	outputs_dir = os.path.join(Path(working_dir), 'outputs', folder_name)
+	repo_dir = Path(__file__).parent.absolute()
+	intermediates_dir = os.path.join(repo_dir, 'intermediates', code)
+	outputs_dir = os.path.join(repo_dir, 'outputs')
 	os.makedirs(intermediates_dir, exist_ok=True)
+	os.makedirs(os.path.join(outputs_dir, 'samples'), exist_ok=True)
 	os.makedirs(os.path.join(outputs_dir, 'plots'), exist_ok=True)
 	os.makedirs(outputs_dir, exist_ok=True)
 

@@ -81,8 +81,8 @@ def main():
 
 		run_information = make_genome_plots(histogram_path, meta_info)
 
-		#if len(meta_info['Plasmid fasta file']) > 1:
-		#	run_information = plot_plasmid(plasmid_histogram_path, meta_info)
+		if len(meta_info['Plasmid fasta file']) > 1:
+			run_information = plot_plasmid(plasmid_histogram_path, meta_info)
 		
 		make_trans_dist_plot(histogram_path, unique_reads_path, run_information)
 
