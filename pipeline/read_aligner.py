@@ -183,7 +183,7 @@ def correct_reads(matches_sam, output_name):
     combine["RL"] = combine["RL"].fillna(0)
     combine["LR"] = combine["LR"].fillna(0)
     
-    hist_path = output_path("{}_read_locations.csv".format(output_name))
+    hist_path = output_path(os.path.join('samples', "{}_read_locations.csv".format(output_name)))
     combine.to_csv(hist_path)
     return [histogram, unique_reads, non_unique_reads]
 
@@ -201,7 +201,7 @@ def correct_output_reads(matches_sam, no_matches_sam, meta_info, output_name):
             fasta_sequence.append(">%s"%(i) + "\n" + j)
 
     fasta_file = "\n".join(fasta_sequence)
-    fasta_path = output_path("{}_unique_reads.fasta".format(output_name))
+    fasta_path = inter_path("{}_unique_reads.fasta".format(output_name))
     with open(fasta_path, 'w', newline='') as file:
         file.write(fasta_file)
 
@@ -237,5 +237,6 @@ def correct_output_reads(matches_sam, no_matches_sam, meta_info, output_name):
         'Spike-in Reads': spike_matches,
         'CRISPR Array Self-Targeting Reads': cripsr_seq_matches
     }
-    print(output)
+    if 'genome' in output_name:
+        print(output)
     return output

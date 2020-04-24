@@ -1,17 +1,17 @@
 # General settings
 
 # This will delete intermediate files
-# It will make full analysis from scratch take longer
-# but free up disk space
+# to free up disk space. Turn it off if you want to debug things
+# or see all fingerprints, all reads, etc
 delete_intermediates = False
 
 # Path to an info csv file with various information, see the example file for details
-info_file = "./inputs/experiment_info2.csv"
+info_file = "./inputs/experiment_info.csv"
+
 
 # 1. FOR LOADING NEW DATA
 
 # The directory where your raw Illumina files are held, 
-# as well as where intermediaries and outputs will be saved
 # Illumina files should be placed in a /raw subfolder
 # and can be zip files or unzipped
 # This can be either relative or absolute path
@@ -24,10 +24,7 @@ Qscore_threshold = 20
 
 # 2. FOR FINGERPRINTING
 
-# The R flank sequence to look for
-flank_sequence = "TGTTGGAACAACCAT"
-
-# The length of the fingerprint to match (set by restriction enzyme)
+# The length of the fingerprint to match
 fingerprint_length = 17
 
 
@@ -50,5 +47,4 @@ genome_bin_size = 5000
 low_reads_cap_percent = 0.50
 
 # Run parameters for transposition distance histogram
-query_length = 500
 on_target_window = 100

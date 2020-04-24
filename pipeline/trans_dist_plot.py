@@ -8,7 +8,7 @@ import csv
 import matplotlib.pyplot as plt
 import time
 
-from parameters import query_length, on_target_window, plots_filetype, plots_dpi
+from parameters import on_target_window, plots_filetype, plots_dpi
 from .utils import output_path
 
 from types import SimpleNamespace
@@ -197,13 +197,12 @@ def create_output_excel(v):
     return
 '''
 
-def make_trans_dist_plot(readsCsv, fastaFile, run_information):
+def make_trans_dist_plot(readsCsv, run_information):
     print("Doing the transposition distance mapping...")
     start = time.perf_counter()
 
     # map spacer to refseq and determine query window
     code = run_information['Sample']
-    run_prefix = run_information['run_prefix']
     genome_path = run_information['Genome fasta file']
     genome_length = len(SeqIO.read(Path(genome_path), 'fasta'))
     desc = run_information['Information for graphs']
@@ -275,7 +274,7 @@ def make_trans_dist_plot(readsCsv, fastaFile, run_information):
             axs.yaxis.set_label_coords(-0.05, 0.4)
 
             fig.set_size_inches(5, 4.2)
-            plot_name = "{}_trans_dist_hist_overlap_v2.svg".format(run_prefix)
+            plot_name = "{}_trans_dist_hist_overlap_v2.svg".format(code)
         else:
             fig, axs = plt.subplots(1, 2)
             fig. tight_layout(rect=[0.15, 0.1, 1, 0.9])
@@ -309,7 +308,7 @@ def make_trans_dist_plot(readsCsv, fastaFile, run_information):
 
             fig.set_size_inches(6, 4.2)
             fig.subplots_adjust(top=0.65)
-            plot_name = "{}_trans_dist_hist_no_overlap_v2.{}".format(run_prefix, plots_filetype)
+            plot_name = "{}_trans_dist_hist_no_overlap_v2.{}".format(code, plots_filetype)
         # save the plot and close it
         plt.savefig(output_path(os.path.join('plots', plot_name)), dpi=plots_dpi)
         plt.close()

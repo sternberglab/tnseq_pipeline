@@ -1,2 +1,0 @@
-﻿Sample,Description,Target direction,Information for graphs,read_type,pCascade #,flank_sequence,End of protospacer,Spacer,Experiment date,CRISPR Array Sequence,Genome fasta file,Plasmid fasta file,Donor sequence,Spike in sequence
-A993,,,,fragment,,ATGGTTGTATCAACA,,GAGACCTCTGTCTTGTCAGCTAGGGTGGTCTC,191220,GCCGAGTAGGTAGCTGATAACGGATCCGAATTCGAGCGAAGGAGATATACATATGTTTTTGCAAAGACCTAAACCTTACA,/Users/Chris_Acree/Documents/lab/resources/genomes/fastas/genome_bl21.fasta,,TGCTGAAACCTCAGGCA,ATGATTACGCCAAGCTT

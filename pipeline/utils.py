@@ -5,11 +5,11 @@ from tempfile import NamedTemporaryFile
 import shutil
 from datetime import datetime
 
-from parameters import info_file, working_dir
+from parameters import info_file
 
 intermediates_dir = ''
 outputs_dir = ''
-def setup_paths(code, Qscore):
+def setup_paths(code):
 	global intermediates_dir
 	global outputs_dir
 	repo_dir = Path(__file__).parent.parent.absolute()
@@ -63,10 +63,10 @@ def update_log(data):
 
 			for row in reader:
 				# Use this if you want to update existing rows instead of add new ones
-
-				#if row['Sample'] == data['Sample'] and row['Qscore Threshold'] == data['Qscore Threshold']:
-				#	row.update(data)
-				#	found = True
+				if row['Sample'] == data['Sample'] and row['Qscore Threshold'] == data['Qscore Threshold']:
+					row.update(data)
+					found = True
+					
 				writer.writerow(row)
 			if not found:
 				writer.writerow(data)
