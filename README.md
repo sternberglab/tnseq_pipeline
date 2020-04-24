@@ -41,6 +41,8 @@ Adding `CRISPR Array Sequence`, `Donor sequence` and `Spike in sequence` will ge
 
 `End of protospacer` attaches small triangles to the genome wide plots at the given location. 
 
+If you're parameters and input file are ready, run the `main.py` file. 
+
 
 # Outputs
 The outputs are put in a created `outputs` folder. The `output_log` contains information about each sample run from raw files like the reads passing each step. In the `outputs/samples` directory, each sample has a CSV with the locations and orientations of all mapped reads. If plasmid file was provided, another CSV is generated with mappings to the plasmid. 
