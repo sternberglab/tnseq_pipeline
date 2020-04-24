@@ -31,12 +31,21 @@ def get_bins(filename, genome_length, bin_size):
     number_of_bins = (genome_length // bin_size) + 1
     bin_numbers = np.array(range(1, number_of_bins + 1))
     bin_values = []
+    k = 0
     for i in bin_numbers:
+
         min_val = (i - 1) * bin_size
         max_val = i * bin_size
-        counts_in_bin = [entry[1] for entry in csv if min_val <= entry[0] < max_val]
-        total_for_bin = sum(counts_in_bin)
-        bin_values.append(total_for_bin)
+        bin_counts = 0
+
+        while (k < len(csv) and csv[k][0] <= max_val):
+            bin_counts += csv[k][1]
+            k += 1
+            if k == len(csv):
+                break
+        #counts_in_bin = [entry[1] for entry in csv if min_val <= entry[0] < max_val]
+        #total_for_bin = sum(counts_in_bin)
+        bin_values.append(bin_counts)
     np_bin_values = np.asarray(bin_values)
     return bin_numbers, np_bin_values
 
@@ -86,12 +95,10 @@ def plot_binned(filepath, run_information, yAxis_type, isPlasmid=False):
     psl = run_information['pCascade #']
     exp_date = run_information['Experiment date']
     spacer_locations = [int(loc) for loc in run_information['End of protospacer'].split()]
-
     genome_path = run_information['Genome fasta file']
     if isPlasmid:
         genome_path = run_information['Plasmid fasta file']
     genome_length = len(SeqIO.read(Path(genome_path), 'fasta'))
-        
     bin_scale = int(100000/genome_bin_size)
     bin_size = genome_bin_size
     if isPlasmid:
@@ -102,10 +109,8 @@ def plot_binned(filepath, run_information, yAxis_type, isPlasmid=False):
     spacer_bins = []
     if not isPlasmid:
         spacer_bins = [int(spacer_location / bin_size) + 0.5 for spacer_location in spacer_locations]
-
     # get bins and counts for the histogram
     b, a2 = get_bins(filepath, genome_length, bin_size)
-
     total_reads = int(sum(a2))
 
     max_x = len(a2)
@@ -129,7 +134,6 @@ def plot_binned(filepath, run_information, yAxis_type, isPlasmid=False):
     # set up figure
     fig, axs = plt.subplots(1, 1, tight_layout=True)
     setup_axes(axs, max_x, max_y, genome_length, bin_size)
-    
     # 2 ticks on the y axis, one at 0 and on at max value of y (max reads)
     axs.set_yticks([0, max_y])
     axs.set_yticklabels([0, max_y_label])
@@ -153,9 +157,9 @@ def plot_binned(filepath, run_information, yAxis_type, isPlasmid=False):
         .format(code, exp_date, desc, psl, total_reads))
 
     # save figure
-    run_prefix = run_information['run_prefix']
+    sample = run_information['Sample']
     graph_name = "plasmid" if isPlasmid else "genome"
-    plt.savefig(output_path(os.path.join('plots', '{}_{}_hist_{}.{}'.format(run_prefix, graph_name, yAxis_type, plots_filetype))), dpi=plots_dpi)
+    plt.savefig(output_path(os.path.join('plots', '{}_{}_hist_{}.{}'.format(sample, graph_name, yAxis_type, plots_filetype))), dpi=plots_dpi)
     plt.close()  # closes the matplotlib preview popup window
 
 def make_genome_plots(csvFile, meta_info, isPlasmid=False):
@@ -163,7 +167,6 @@ def make_genome_plots(csvFile, meta_info, isPlasmid=False):
     graph_name = "plasmid" if isPlasmid else "genome"
     print("Making {} mapping histograms...".format(graph_name))
 
-    print("Got the meta information about this run, creating the genome-mapping histograms...")
     plot_binned(csvFile, meta_info, 'raw', isPlasmid)
     plot_binned(csvFile, meta_info, 'normalized', isPlasmid)
     plot_binned(csvFile, meta_info, 'zoomed', isPlasmid)

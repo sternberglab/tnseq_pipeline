@@ -28,6 +28,8 @@ plt.ioff()
 
 plasmid_bin_size = 20
 xtick_increment = 1000
+CRISPR_array_spacer = 'GAGACCtctgtcttgtcagctagggtGGTCTC'.upper()
+donor_spacer = 'GCCACCGCTGAGCAATAACTAGCATAACCCCT'.upper()
 
 def get_bins(filename, genome_length):
     csv = np.genfromtxt(filename, delimiter=",", skip_header=1)
@@ -141,9 +143,9 @@ def plot_binned(filepath, run_information, yAxis_type, isPlasmid=False):
         .format(code, exp_date, desc, psl, total_reads))
 
     # save figure
-    sample = run_information['Sample']
+    run_prefix = run_information['run_prefix']
     graph_name = "plasmid"
-    plot_path = output_path(os.path.join('plots', '{}_{}_hist_{}.{}'.format(sample, graph_name, yAxis_type, plots_filetype)))
+    plot_path = output_path(os.path.join('plots', '{}_{}_hist_{}.{}'.format(run_prefix, graph_name, yAxis_type, plots_filetype)))
     plt.savefig(plot_path, dpi=plots_dpi)
     plt.close()  # closes the matplotlib preview popup window
 
@@ -195,8 +197,6 @@ def plot_section(csvFile, meta_info, spacerSeq, name):
 
 
 def plot_plasmid(csvFile, meta_info):
-    CRISPR_array_spacer = meta_info['CRISPR Array Sequence']
-    donor_spacer = meta_info['Donor sequence']
     start = time.perf_counter()
     print("Making plasmid mapping histograms...")
 

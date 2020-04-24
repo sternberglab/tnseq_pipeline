@@ -5,17 +5,18 @@ from tempfile import NamedTemporaryFile
 import shutil
 from datetime import datetime
 
-from parameters import info_file, working_dir
+from parameters import info_file
 
 intermediates_dir = ''
 outputs_dir = ''
-def setup_paths(code, Qscore):
-	folder_name = '{}_Q{}'.format(code, Qscore)
+def setup_paths(code):
 	global intermediates_dir
 	global outputs_dir
-	intermediates_dir = os.path.join(Path(working_dir), 'intermediates', folder_name)
-	outputs_dir = os.path.join(Path(working_dir), 'outputs', folder_name)
+	repo_dir = Path(__file__).parent.parent.absolute()
+	intermediates_dir = os.path.join(repo_dir, 'intermediates', code)
+	outputs_dir = os.path.join(repo_dir, 'outputs')
 	os.makedirs(intermediates_dir, exist_ok=True)
+	os.makedirs(os.path.join(outputs_dir, 'samples'), exist_ok=True)
 	os.makedirs(os.path.join(outputs_dir, 'plots'), exist_ok=True)
 	os.makedirs(outputs_dir, exist_ok=True)
 
@@ -46,7 +47,7 @@ def update_log(data):
 
 	data['Analysis Date'] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
-	log_path = os.path.join(outputs_dir, '..', 'output_log.csv')
+	log_path = os.path.join(outputs_dir, 'output_log.csv')
 	if not Path(log_path).exists():
 		with open(log_path, 'w') as csvfile:
 			writer = csv.DictWriter(csvfile, fieldnames=log_fieldnames)
@@ -62,10 +63,10 @@ def update_log(data):
 
 			for row in reader:
 				# Use this if you want to update existing rows instead of add new ones
-
-				#if row['Sample'] == data['Sample'] and row['Qscore Threshold'] == data['Qscore Threshold']:
-				#	row.update(data)
-				#	found = True
+				if row['Sample'] == data['Sample'] and row['Qscore Threshold'] == data['Qscore Threshold']:
+					row.update(data)
+					found = True
+					
 				writer.writerow(row)
 			if not found:
 				writer.writerow(data)

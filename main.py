@@ -43,47 +43,45 @@ def main():
 		print("PROCESSING SAMPLE {}...".format(sample))
 		print('----------')
 		print('----------')
-		setup_paths(sample, Qscore_threshold)
+		setup_paths(sample)
 
 		log_info = {'Sample': sample, 'Qscore Threshold': str(Qscore_threshold)}
 
-		run_prefix = "{}_Q{}".format(sample, Qscore_threshold)
-		meta_info['run_prefix'] = run_prefix
-
 		# Start at the end to avoid repeating steps with saved results
-		histogram_path = output_path("genome_read_locations.csv")
-		plasmid_histogram_path = output_path("plasmid_read_locations.csv")
+		histogram_path = output_path(os.path.join('samples', "{}_genome_read_locations.csv".format(sample)))
+		plasmid_histogram_path = output_path(os.path.join('samples', "{}_plasmid_read_locations.csv".format(sample)))
 		
-		unique_reads_path = output_path("genome_unique_reads.fasta")
-		filtered_path = inter_path('{}_FILTERED.fastq'.format(run_prefix))
-		fp_path = inter_path("{}_FINGERPRINTED.fasta".format(run_prefix))
-		if not Path(histogram_path).exists() or not Path(plasmid_histogram_path).exists() or not Path(unique_reads_path).exists():
+		filtered_path = inter_path('{}_FILTERED.fastq'.format(sample))
+		fp_path = inter_path("{}_FINGERPRINTED.fasta".format(sample))
 
-			fp_path = inter_path("{}_FINGERPRINTED.fasta".format(run_prefix))
-			if not Path(fp_path).exists():
+		# step 1: process raw files, concatenate
+		raw_files_dir = os.path.join(Path(working_dir), 'raw')
+		filtered_path = inter_path('{}_FILTERED.fastq'.format(sample))
+		filenames = [path.resolve() for path in Path(raw_files_dir).glob(sample + '*.fastq')]
+		process_results = process_files(sample, filenames, filtered_path)
+		log_info.update(process_results)
 
-				filtered_path = inter_path('{}_FILTERED.fastq'.format(run_prefix))
-				if not Path(filtered_path).exists():
-					raw_files_dir = os.path.join(Path(working_dir), 'raw')
-					filenames = [path.resolve() for path in Path(raw_files_dir).glob(sample + '*.fastq')]
-					process_results = process_files(sample, filenames, filtered_path)
-					log_info.update(process_results)
-				
-				fp_results = fingerprinting(filtered_path, fp_path)
-				log_info.update(fp_results)
+		# step 2: fingerprint the reads
+		fp_path = inter_path("{}_FINGERPRINTED.fasta".format(sample))
+		fp_results = fingerprinting(filtered_path, fp_path, meta_info)
+		log_info.update(fp_results)
 
-			alignment_results = run_alignment(fp_path, meta_info)
-			log_info.update(alignment_results)
+		# step 3: align the reads in the genome
+		alignment_results = run_alignment(fp_path, meta_info)
+		log_info.update(alignment_results)
 
-			update_log(log_info)
-			if delete_intermediates:
-				shutil.rmtree(os.path.join(Path(working_dir), 'intermediates', run_prefix))
+		update_log(log_info)
+		if delete_intermediates:
+			shutil.rmtree(inter_path(''))
 
 		run_information = make_genome_plots(histogram_path, meta_info)
 
 		if len(meta_info['Plasmid fasta file']) > 1:
 			run_information = plot_plasmid(plasmid_histogram_path, meta_info)
 		
-		make_trans_dist_plot(unique_reads_path, run_information)
-		
+		make_trans_dist_plot(histogram_path, run_information)
+	
+	if delete_intermediates:
+		shutil.rmtree(Path(inter_path('')).parent.absolute())
+
 main()
