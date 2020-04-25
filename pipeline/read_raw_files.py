@@ -13,7 +13,6 @@ def filtergen(files, threshold):  # generator function that returns edited reads
     global total_records
     total_records = 0
     for file in files:
-        print("1", file)
         for record in SeqIO.parse(file, "fastq"):
             total_records += 1
             # Convert base qualities to Boolean based on Qscore threshold value. Only use reads with >=50% non-N:

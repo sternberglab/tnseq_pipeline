@@ -30,11 +30,12 @@ def find_alignments(read_sequences_fasta, genome_fasta, output_filename):
     bowtie_indexes_path = Path(inter_path("genomes/{}".format(genome_fasta_path.stem)))
     os.makedirs(bowtie_indexes_path.parent.resolve(), exist_ok=True)
     
-    build_command = 'bowtie2-build {} {} -q'.format(genome_fasta_path.resolve(), bowtie_indexes_path)
+    build_command = 'bowtie2-build "{}" "{}" -q'.format(genome_fasta_path.resolve(), bowtie_indexes_path)
     subprocess.run(build_command, shell=True)
 
     output_alignment_results = inter_path("{}_bwt2_full.sam".format(output_filename))
     align_command = 'bowtie2 -x {} -t -f {} -S {} -p {} -a --quiet'.format(bowtie_indexes_path, read_sequences_fasta, output_alignment_results, cores_to_use)
+    print(align_command)
     subprocess.run(align_command, shell=True)
 
     # Use files with the awk because windows is crazy
