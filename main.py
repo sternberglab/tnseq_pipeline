@@ -58,6 +58,9 @@ def main():
 		raw_files_dir = os.path.join(Path(working_dir), 'raw')
 		filtered_path = inter_path('{}_FILTERED.fastq'.format(sample))
 		filenames = [path.resolve() for path in Path(raw_files_dir).glob(sample + '*.fastq')]
+		if len(filenames) < 1:
+			print("COULD NOT FIND ANY FASTA FILES FOR THE SAMPLE")
+			continue
 		process_results = process_files(sample, filenames, filtered_path)
 		log_info.update(process_results)
 

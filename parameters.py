@@ -14,8 +14,10 @@ info_file = "./inputs/experiment_info.csv"
 # The directory where your raw Illumina files are held, 
 # Illumina files should be placed in a /raw subfolder
 # and can be zip files or unzipped
-# This can be either relative or absolute path
-working_dir = "../rename"
+# This can be either relative or absolute path, but the absolute path it goes to cannot have spaces!
+# ex. C:\Chris A\files will not work, because a space is in the path
+# Intermediate files will also be generated into this folder (and then deleted, if above setting is True)
+working_dir = "../original_pipeline_example"
 
 # The Qscore_threshold to use
 # This must be defined (use -1 if do not want to filter)
