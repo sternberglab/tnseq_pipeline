@@ -10,13 +10,13 @@ import heapq
 import time
 
 from parameters import info_file, plots_filetype, plots_dpi, fig_size_inches
-from .utils import output_path, get_log_entry
+from .utils import output_path
 
 ####
-# Makes 3 graphs:
-# 1. A binned histogram of reads
-# 2. A modified version of the first binned histogram with y-axis capped at a custom percentage, to show missed reads
-# 3. A zoomed-in histogram around the target region, showing nearing misses
+# Makes 3 graphs, for reads mapped to plasmid
+# 1. A "raw" binned histogram of reads
+# 2. A modified version of the first binned histogram, with y-axis normalized to total reads (100%)
+# 3. A zoomed-in histogram capped at a small percentage, showing low level off-target reads
 ###
 
 # font control

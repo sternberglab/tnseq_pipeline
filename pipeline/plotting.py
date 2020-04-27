@@ -10,22 +10,23 @@ import heapq
 import time
 
 from parameters import info_file, fig_size_inches, genome_bin_size, low_reads_cap_percent, plots_filetype, plots_dpi
-from .utils import output_path, get_log_entry
+from .utils import output_path
 
 ####
-# Makes 3 graphs:
-# 1. A binned histogram of reads
-# 2. A modified version of the first binned histogram with y-axis capped at a custom percentage, to show missed reads
-# 3. A zoomed-in histogram around the target region, showing nearing misses
+# Makes 3 graphs, for reads mapped to genome
+# 1. A "raw" binned histogram of reads
+# 2. A modified version of the first binned histogram, with y-axis normalized to total reads (100%)
+# 3. A zoomed-in histogram capped at a small percentage, showing low level off-target reads
 ###
 
 # font control
-plt.rcParams['svg.fonttype'] = 'none'  # important so that text stays as intact characters in the output
+plt.rcParams['svg.fonttype'] = 'none'  # important so that text stays as intact characters in the svg output
 plt.rcParams['font.sans-serif'] = "Arial"
 plt.rcParams['font.family'] = "sans-serif"
 
 plt.ioff()
 
+# Additively bin read count data for genome-wide histogram plot
 def get_bins(filename, genome_length, bin_size):
     csv = np.genfromtxt(filename, delimiter=",", skip_header=1)
     number_of_bins = (genome_length // bin_size) + 1
@@ -40,6 +41,7 @@ def get_bins(filename, genome_length, bin_size):
     np_bin_values = np.asarray(bin_values)
     return bin_numbers, np_bin_values
 
+# Configure axes for matplotlib
 def setup_axes(axs, max_x, max_y, genome_length, bin_size):
     axs.spines['top'].set_visible(False)
     axs.spines['right'].set_visible(False)
@@ -50,19 +52,20 @@ def setup_axes(axs, max_x, max_y, genome_length, bin_size):
     axs.spines['bottom'].set_bounds(0, max_x)  # bottom line starts and end with length of genome
     axs.spines['left'].set_position('zero')
 
-    # axis labeling
+    # axis labeling (remove comments to add back)
     #plt.xlabel("E. coli genomic coordinate (Mbp)")
     #plt.ylabel("Read count")
     axs.yaxis.set_label_coords(-0.02, 0.5)
 
-    # set up xticks
+    # determine x-axis tick increments based on genome size
     increments = [1000, 2000, 5000, 10000, 20000, 50000, 100000, 200000, 500000, 1000000, 2000000, 5000000, 10000000]
     i = 0
     increment = increments[0]
     while genome_length // increment > 10:
         i += 1
         increment = increments[i]
-    
+
+    # set up x-axis
     x_axis_size = int(genome_length / bin_size)
 
     axs.set_xticks(range(0, x_axis_size, int(increment / bin_size)))
@@ -75,6 +78,7 @@ def setup_axes(axs, max_x, max_y, genome_length, bin_size):
 
     return axs
 
+# Main plotting function for genome-wide histograms
 def plot_binned(filepath, run_information, yAxis_type, isPlasmid=False):  
     # Main graphing function for histogram binning
     # The yAxis_type can one of either:
@@ -158,6 +162,7 @@ def plot_binned(filepath, run_information, yAxis_type, isPlasmid=False):
     plt.savefig(output_path(os.path.join('plots', '{}_{}_hist_{}.{}'.format(run_prefix, graph_name, yAxis_type, plots_filetype))), dpi=plots_dpi)
     plt.close()  # closes the matplotlib preview popup window
 
+# Calls plot_binned three times for three different genome-wide histograms
 def make_genome_plots(csvFile, meta_info, isPlasmid=False):
     start = time.perf_counter()
     graph_name = "plasmid" if isPlasmid else "genome"
