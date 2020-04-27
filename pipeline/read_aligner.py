@@ -156,7 +156,7 @@ def correct_reads(matches_sam, output_name):
         chunk_unique_reads = chunk[chunk.read_number.isin(unique_read_numbers)]
         unique_reads = unique_reads.append(chunk_unique_reads)
         chunk_non_unique_reads = chunk[np.logical_not(chunk.read_number.isin(unique_read_numbers))]
-        non_unique_reads = non_unique_reads.append(chunk_unique_reads)
+        non_unique_reads = non_unique_reads.append(chunk_non_unique_reads)
 
     #Get the corrected integration coordinate
 
