@@ -14,9 +14,10 @@ from .utils import output_path
 
 from types import SimpleNamespace
 
+# Creates and excel .xlsx output with transposition distance statistics
 def create_output_excel(v):
     excel_path = Path(output_path('{}_trans_dist_mmei_output.xlsx'.format(v.run_prefix)))
-
+    # set up all the formatting for XlsxWriter
     log = xlsxwriter.Workbook(excel_path)
     bold = log.add_format({'bold': True})
     upsizebold = log.add_format()
@@ -196,6 +197,7 @@ def create_output_excel(v):
     log.close()
     return
 
+# Main transposition distance plotting function
 def make_trans_dist_plot(fastaFile, run_information):
     print("Doing the transposition distance mapping...")
     start = time.perf_counter()
@@ -286,7 +288,7 @@ def make_trans_dist_plot(fastaFile, run_information):
     max_y = max(max(y_rl), max(y_lr))
 
     for overlap in [True, False]:
-        if overlap:
+        if overlap:  # T-RL and T-LR plots are overlapped
             fig, axs = plt.subplots(1, 1, tight_layout=True)
             title = fig.suptitle("{} - {} / On-target = {}% / Bias = {} :1".format(
                 code, description, round(100*on_target_total/total, 1),
@@ -314,7 +316,7 @@ def make_trans_dist_plot(fastaFile, run_information):
 
             fig.set_size_inches(5, 4.2)
             plot_name = "{}_trans_dist_hist_overlap.svg".format(run_prefix)
-        else:
+        else:  # T-RL and T-LR plots are separate subplots
             fig, axs = plt.subplots(1, 2)
             fig. tight_layout(rect=[0.15, 0.1, 1, 0.9])
             title = fig.suptitle("{} - {}\nOn-target frequency: {}%\nOrientation bias (R->L:L->R): {}:1"

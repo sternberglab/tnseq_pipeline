@@ -29,10 +29,16 @@ def find_alignments(read_sequences_fasta, genome_fasta, output_filename):
     cores_to_use = max(1, cores-1)
     bowtie_indexes_path = Path(inter_path("genomes/{}".format(genome_fasta_path.stem)))
     os.makedirs(bowtie_indexes_path.parent.resolve(), exist_ok=True)
-    
+
+    # build a Bowtie2 index for mapping from reference genome
     build_command = 'bowtie2-build {} {} -q'.format(genome_fasta_path.resolve(), bowtie_indexes_path)
     subprocess.run(build_command, shell=True)
 
+    # align reads, output SAM alignments. See bowtie2 documentation for ful details on arguments used
+    # -a mode searches for all alignments
+    # -p runs on multiple parallel processors to boost performance
+    # -t prints time information
+    # -f to specify fasta input (ignore qualities)
     output_alignment_results = inter_path("{}_bwt2_full.sam".format(output_filename))
     align_command = 'bowtie2 -x {} -t -f {} -S {} -p {} -a --quiet'.format(bowtie_indexes_path, read_sequences_fasta, output_alignment_results, cores_to_use)
     subprocess.run(align_command, shell=True)
@@ -66,6 +72,7 @@ def run_alignment(fingerprinted_path, meta_info):
     genome_file_path = Path(meta_info['Genome fasta file'])
     plasmid_file_path = Path(meta_info['Plasmid fasta file'])
 
+    # Align to reference genome based on path provided
     genome_reads = inter_path("genome_bwt2_matches.sam").format(meta_info['Sample'])
     genome_no_reads = inter_path("genome_bwt2_no_matches.sam").format(meta_info['Sample'])
     hist_results = ''
@@ -83,6 +90,7 @@ def run_alignment(fingerprinted_path, meta_info):
     genome_no_reads_fasta = inter_path("{}.fasta".format(Path(genome_no_reads).stem))
     sam_to_fasta(genome_no_reads, genome_no_reads_fasta)
 
+    # If a path for reference plasmid was provided, align to plasmid
     if len(meta_info['Plasmid fasta file']) > 1:
         plasmid_reads = inter_path("plasmid_bwt2_matches.sam").format(meta_info['Sample'])
         plasmid_no_reads = inter_path("plasmid_bwt2_no_matches.sam").format(meta_info['Sample'])
@@ -98,7 +106,7 @@ def run_alignment(fingerprinted_path, meta_info):
 
     return hist_results
 
-def sam_to_chunks(csv_file):
+def sam_to_chunks(csv_file):  # breaks down large sam file into smaller chunks to reduce memory usage
     chunks = pd.read_csv(csv_file,sep="\t",usecols=[0,1,2,3,4,9,11,12,13,15,16,17],header=None, chunksize=1000000)
     return chunks
 
@@ -138,7 +146,7 @@ def correct_reads(matches_sam, output_name):
         unique_read_numbers += list(chunk_unique_read_numbers.index)
 
         if len(set(unique_read_numbers)) != len(unique_read_numbers):
-            print("Annoying, there was a duplicate between chunks, finding and liminating it now...")
+            print("Annoying, there was a duplicate between chunks, finding and eliminating it now...")
             unique_read_numbers = [num for num in unique_read_numbers if unique_read_numbers.count(num) == 1]
 
     unique_reads = pd.DataFrame(columns=col_names)
@@ -148,7 +156,7 @@ def correct_reads(matches_sam, output_name):
         chunk_unique_reads = chunk[chunk.read_number.isin(unique_read_numbers)]
         unique_reads = unique_reads.append(chunk_unique_reads)
         chunk_non_unique_reads = chunk[np.logical_not(chunk.read_number.isin(unique_read_numbers))]
-        non_unique_reads = non_unique_reads.append(chunk_unique_reads)
+        non_unique_reads = non_unique_reads.append(chunk_non_unique_reads)
 
     #Get the corrected integration coordinate
 
@@ -234,5 +242,8 @@ def correct_output_reads(matches_sam, no_matches_sam, meta_info, output_name):
         'Spike-in Reads': spike_matches,
         'CRISPR Array Self-Targeting Reads': cripsr_seq_matches
     }
-    print(output)
+    print("Alignment Summary------------------")
+    for stat in output:
+        print(stat,':', output[stat])
+    print("-----------------------------------")
     return output

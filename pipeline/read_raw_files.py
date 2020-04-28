@@ -9,7 +9,9 @@ from .utils import inter_path
 from parameters import Qscore_threshold, delete_intermediates, working_dir
 
 total_records = 0
-def filtergen(files, threshold):  # generator function that returns edited reads that pass filter, to write new fastq file
+# generator function that yields edited reads that pass filter
+# Goes through all fastq files (from separate sequencing lanes) from the same sample
+def filtergen(files, threshold):
     global total_records
     total_records = 0
     for file in files:
@@ -23,6 +25,7 @@ def filtergen(files, threshold):  # generator function that returns edited reads
                                    description=record.description, letter_annotations=record.letter_annotations)
                 yield newrec
 
+# Calls filtergen generator to write filtered records into a new fastq files. Also returns filtering stats for log
 def process_files(code, input_filenames, filtered_path):
     print("Processing and quality filtering {} files...".format(len(input_filenames)))
     start = time.perf_counter()
@@ -37,7 +40,7 @@ def process_files(code, input_filenames, filtered_path):
 
 def unzip_files():
     raw_files_dir = os.path.join(Path(working_dir), 'raw')
-    zip_files = Path(raw_files_dir).glob('*.zip')
+    zip_files = Path(raw_files_dir).glob('*.zip')  # grabs all existing .zip files
     for zipped in zip_files:
         with zipfile.ZipFile(zipped.resolve(), 'r') as zip_ref:
             zip_ref.extractall(raw_files_dir)
