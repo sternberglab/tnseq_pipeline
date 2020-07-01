@@ -54,28 +54,30 @@ def main():
 		filtered_path = inter_path('{}_FILTERED.fastq'.format(sample))
 		fp_path = inter_path("{}_FINGERPRINTED.fasta".format(sample))
 
-		# step 1: process raw files, concatenate
-		raw_files_dir = os.path.join(Path(working_dir), 'raw')
-		filtered_path = inter_path('{}_FILTERED.fastq'.format(sample))
-		filenames = [path.resolve() for path in Path(raw_files_dir).glob(sample + '*.fastq')]
-		if len(filenames) < 1:
-			print("COULD NOT FIND ANY FASTA FILES FOR THE SAMPLE")
-			continue
-		process_results = process_files(sample, filenames, filtered_path)
-		log_info.update(process_results)
+		# Skip the processing if the output files already exist
+		if not Path(histogram_path).exists():
+			# step 1: process raw files, concatenate
+			raw_files_dir = os.path.join(Path(working_dir), 'raw')
+			filtered_path = inter_path('{}_FILTERED.fastq'.format(sample))
+			filenames = [path.resolve() for path in Path(raw_files_dir).glob(sample + '*.fastq')]
+			if len(filenames) < 1:
+				print("COULD NOT FIND ANY FASTA FILES FOR THE SAMPLE")
+				continue
+			process_results = process_files(sample, filenames, filtered_path)
+			log_info.update(process_results)
 
-		# step 2: fingerprint the reads
-		fp_path = inter_path("{}_FINGERPRINTED.fasta".format(sample))
-		fp_results = fingerprinting(filtered_path, fp_path, meta_info)
-		log_info.update(fp_results)
+			# step 2: fingerprint the reads
+			fp_path = inter_path("{}_FINGERPRINTED.fasta".format(sample))
+			fp_results = fingerprinting(filtered_path, fp_path, meta_info)
+			log_info.update(fp_results)
 
-		# step 3: align the reads in the genome
-		alignment_results = run_alignment(fp_path, meta_info)
-		log_info.update(alignment_results)
+			# step 3: align the reads in the genome
+			alignment_results = run_alignment(fp_path, meta_info)
+			log_info.update(alignment_results)
 
-		update_log(log_info)
-		if delete_intermediates:
-			shutil.rmtree(inter_path(''))
+			update_log(log_info)
+			if delete_intermediates:
+				shutil.rmtree(inter_path(''))
 
 		run_information = make_genome_plots(histogram_path, meta_info)
 
