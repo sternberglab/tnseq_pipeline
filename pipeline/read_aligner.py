@@ -67,8 +67,8 @@ def run_alignment(fingerprinted_path, meta_info):
     genome_file_path = Path(meta_info['Genome fasta file'])
     plasmid_file_path = Path(meta_info['Plasmid fasta file'])
 
-    genome_reads = inter_path("genome_bwt2_matches.sam").format(meta_info['Sample'])
-    genome_no_reads = inter_path("genome_bwt2_no_matches.sam").format(meta_info['Sample'])
+    genome_reads = inter_path(f"{meta_info['Sample']}_genome_bwt2_matches.sam")
+    genome_no_reads = inter_path(f"{meta_info['Sample']}_genome_bwt2_no_matches.sam")
     hist_results = ''
     if not Path(genome_reads).exists():
         if genome_file_path.exists():
