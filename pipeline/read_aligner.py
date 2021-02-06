@@ -72,8 +72,8 @@ def run_alignment(fingerprinted_path, meta_info):
     hist_results = ''
     if not Path(genome_reads).exists():
         if genome_file_path.exists():
-            find_alignments(fingerprinted_path, meta_info['Genome fasta file'], 'genome')
-            hist_results = correct_output_reads(genome_reads, genome_no_reads, meta_info, '{}_genome'.format(meta_info['Sample']))
+            find_alignments(fingerprinted_path, meta_info['Genome fasta file'], f"{meta_info['Sample']}_genome")
+            hist_results = correct_output_reads(genome_reads, genome_no_reads, meta_info, f"{meta_info['Sample']}_genome")
         else:
             print("No genome fasta provided in the info csv, skipping genome alignment")
 
@@ -89,8 +89,8 @@ def run_alignment(fingerprinted_path, meta_info):
         plasmid_no_reads = inter_path("plasmid_bwt2_no_matches.sam").format(meta_info['Sample'])
         if not Path(plasmid_reads).exists():
             if plasmid_file_path.exists():
-                find_alignments(genome_no_reads_fasta, meta_info['Plasmid fasta file'], 'plasmid')
-                correct_output_reads(plasmid_reads, plasmid_no_reads, meta_info, '{}_plasmid'.format(meta_info['Sample']))
+                find_alignments(genome_no_reads_fasta, meta_info['Plasmid fasta file'], f"{meta_info['Sample']}_plasmid")
+                correct_output_reads(plasmid_reads, plasmid_no_reads, meta_info, f"{meta_info['Sample']}_plasmid")
             else:
                 print("No plasmid fasta provided in the csv, skipping plasmid alignment")
     
