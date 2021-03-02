@@ -6,6 +6,8 @@ import os
 
 from parameters import fingerprint_length
 
+allow_flank_mismatch = False
+
 def hamming_dist(s1, s2):
     assert len(s1) == len(s2)
     return sum(ch1 != ch2 for ch1, ch2 in zip(s1, s2))
@@ -38,7 +40,7 @@ def fpgen(input_reads, meta_info):  # generator function that returns
                     yield newrec
         
         # only allow mismatch of 1 for restriction enzyme fingerprints
-        elif read_type == 'restriction':
+        elif read_type == 'restriction' or allow_flank_mismatch:
             i = 0
             while 0 <= i <= (len(record.seq) - flank_length):
                 query = record.seq[i:i+flank_length]

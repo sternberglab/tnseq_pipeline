@@ -213,13 +213,19 @@ def make_trans_dist_plot(readsCsv, run_information):
 
     genome = SeqIO.read(Path(genome_path), "fasta")
     refseq = genome.seq.upper()
+    is_reverse = False
     if refseq.find(spacer) >= 0:
         spacer_end = refseq.find(spacer) + len(spacer)
+        target_site = spacer_end + 50
     elif refseq.reverse_complement().find(spacer) >= 0:
-        spacer_end = refseq.find(spacer) + len(spacer)
+        print("is rev")
+        spacer_end = len(refseq) - (refseq.reverse_complement().find(spacer) + len(spacer))
+        target_site = spacer_end - 50
+        is_reverse = True
     else:
         print("ERROR - Spacer not found within RefSeq")
         return
+    print(spacer_end, target_site)
 
     all_reads = []
     with open(readsCsv, 'r', encoding='utf-8-sig') as f:
@@ -232,9 +238,12 @@ def make_trans_dist_plot(readsCsv, run_information):
     y_rl = []
     y_lr = []
     total = sum([int(row["reads"]) for row in all_reads])
-    reads_in_window = [row for row in all_reads if abs(int(row["position"]) - (spacer_end + 50)) < (int(on_target_window) / 2)]
+    reads_in_window = [row for row in all_reads if abs(int(row["position"]) - (target_site + 50)) < (int(on_target_window) / 2)]
     for i in range(20, 61):
-        reads = next(iter([row for row in all_reads if int(row["position"]) == spacer_end + i]), None)
+        if is_reverse:
+            reads = next(iter([row for row in all_reads if int(row["position"]) == spacer_end - i]), None)
+        else:
+            reads = next(iter([row for row in all_reads if int(row["position"]) == spacer_end + i]), None)
         if reads:
             y_rl.append(int(float(reads["RL"])))
             y_lr.append(int(float(reads["LR"])))

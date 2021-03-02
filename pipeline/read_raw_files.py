@@ -1,6 +1,8 @@
 from Bio import SeqIO
 from Bio.SeqRecord import SeqRecord
 import time
+import gzip
+import shutil
 import os
 import zipfile
 from pathlib import Path
@@ -27,6 +29,7 @@ def process_files(code, input_filenames, filtered_path):
     print("Processing and quality filtering {} files...".format(len(input_filenames)))
     start = time.perf_counter()
     passing_filter = 0
+    
     with open(filtered_path, 'w+') as filtered_outfile:
         passing_filter = SeqIO.write(filtergen(input_filenames, Qscore_threshold), filtered_outfile, "fastq")
 
@@ -43,3 +46,11 @@ def unzip_files():
             zip_ref.extractall(raw_files_dir)
         if delete_intermediates:
             os.remove(zipped)
+
+    gzip_files = Path(raw_files_dir).glob('*.gz')
+    for zipped in gzip_files:
+        if Path(str(zipped.resolve())[:-3]).exists():
+            continue
+        with gzip.open(zipped.resolve()) as f_in:
+            with open(str(zipped.resolve())[:-3], 'wb') as f_out:
+                shutil.copyfileobj(f_in, f_out)
