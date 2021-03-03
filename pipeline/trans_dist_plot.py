@@ -218,14 +218,12 @@ def make_trans_dist_plot(readsCsv, run_information):
         spacer_end = refseq.find(spacer) + len(spacer)
         target_site = spacer_end + 50
     elif refseq.reverse_complement().find(spacer) >= 0:
-        print("is rev")
         spacer_end = len(refseq) - (refseq.reverse_complement().find(spacer) + len(spacer))
         target_site = spacer_end - 50
         is_reverse = True
     else:
         print("ERROR - Spacer not found within RefSeq")
         return
-    print(spacer_end, target_site)
 
     all_reads = []
     with open(readsCsv, 'r', encoding='utf-8-sig') as f:

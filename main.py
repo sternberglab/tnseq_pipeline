@@ -55,7 +55,7 @@ def main():
 		fp_path = inter_path("{}_FINGERPRINTED.fasta".format(sample))
 
 		# Skip the processing if the output files already exist
-		if not Path(histogram_path).exists():
+		if not Path(histogram_path).exists() or True:
 			# step 1: process raw files, concatenate
 			raw_files_dir = os.path.join(Path(working_dir), 'raw')
 			filtered_path = inter_path('{}_FILTERED.fastq'.format(sample))
@@ -76,8 +76,6 @@ def main():
 			log_info.update(alignment_results)
 
 			update_log(log_info)
-			if delete_intermediates:
-				shutil.rmtree(inter_path(''))
 
 		run_information = make_genome_plots(histogram_path, meta_info)
 

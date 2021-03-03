@@ -102,35 +102,34 @@ def sam_to_chunks(csv_file):
     chunks = pd.read_csv(csv_file,sep="\t",usecols=[0,1,2,3,4,9,11,12,13,15,16,17],header=None, chunksize=1000000)
     return chunks
 
-def correct_reads(matches_sam, output_name, meta_info):
-    '''
-    # dictionary parsing reads
-    reads = {}
-    with sam_file_handler as open(matches_sam, 'r'):
-        reader = csv.reader(sam_file_handler, delimited="\t")
-        for row in reader:
-            read_number = row[0]
-            coordinate = row[3]
-            flag_sum = row[2]
-            if flag_sum == 0:
-                direction = 'LR'
-                corrected_coor = coordinate + map_length
-            else:
-                direction = 'RL'
-                corrected_coor = coordinate + TSD
-            min_obj = {'coord': corrected_coor, 'direction': direction}
-            
-            if reads[read_number]:
-                reads.read_number.push(min_obj)
-            else:
-                reads = [min_obj]
+def correct_read(genome_coord, read_is_fw_strand, spacer_is_fw_strand, corrected_coor, orientation):
+    if read_is_fw_strand:
+        # j=0 means the FP was matched on the forward strand
+        # j=256 means still forward strand, was a secondary alignment
+        if not spacer_is_fw_strand:
+            coord = genome_coord + map_length - TSD
+            read_orient = 'LR'
+        else:
+            coord = genome_coord + map_length
+            read_orient = 'RL'
+        corrected_coor.append(coord)
+        orientation.append(read_orient)
+    
+    # this means it was matched on the reverse complement
+    else:
+        if not spacer_is_fw_strand:
+            coord = genome_coord
+            read_orient = 'RL'
+        else:
+            coord = genome_coord + TSD
+            read_orient = 'LR'
+        corrected_coor.append(coord)
+        orientation.append(read_orient)
 
-    unique_reads = [read for read in reads if read.length == 1]
-    non_unique_reads = [read fo]
-    '''
+def correct_reads(matches_sam, output_name, meta_info):
     genome = SeqIO.read(Path(meta_info['Genome fasta file']), "fasta")
     refseq = genome.seq.upper()
-    is_reverse = refseq.find(meta_info['Spacer'].upper()) < 0
+    spacer_is_fw_strand = refseq.find(meta_info['Spacer'].upper()) >= 0
 
     col_names = "read_number, flag_sum, ref_genome, ref_genome_coordinate, mapq, read_sequence, AS, XN, XM, XG, NM, MD".split(", ")
     
@@ -163,31 +162,13 @@ def correct_reads(matches_sam, output_name, meta_info):
     n=0
     k=0
     for i,j,m in zip(histogram.ref_genome_coordinate, histogram.flag_sum, histogram.read_sequence):
-        if (j%256) == 0:
-            # j=0 means the FP was matched on the forward strand
-            # j=256 means still forward strand, was a secondary alignment
-            if is_reverse:
-                corrected_coor.append(i+map_length-TSD)
-                orientation.append('LR')
-            else:
-                corrected_coor.append(i + map_length)
-                orientation.append('RL')
-            #n+=1
-            #if n < 8:
-            #    print("fw", i, i + map_length, m, j)
-        elif (j%256) % 16 ==0:
-            #k+=1
-            #if k < 8:
-            #    print("rev",i,i+TSD, m, j)
-            # this means it was matched on the reverse complement
-            if is_reverse:
-                corrected_coor.append(i)
-                orientation.append('RL')
-            else:
-                corrected_coor.append(i + TSD)
-                orientation.append('LR')
-        else:
-            print("Unexpected flag sum:", j)
+        read_is_fw_strand = j%256 == 0
+        if meta_info['read_type'] == 'fragment':
+            # fragmentation reads use the RC of the flank sequence, 
+            # so their "actual" flank sequence read would be the opposite
+            # strand of the detected one
+            read_is_fw_strand = not read_is_fw_strand
+        correct_read(i, read_is_fw_strand, spacer_is_fw_strand, corrected_coor, orientation)
 
     histogram = histogram.assign(corrected_coor=corrected_coor, orientation=orientation)
     
