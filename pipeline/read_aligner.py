@@ -34,8 +34,7 @@ def find_alignments(read_sequences_fasta, genome_fasta, output_filename):
     subprocess.run(build_command, shell=True)
 
     output_alignment_results = inter_path("{}_bwt2_full.sam".format(output_filename))
-    align_command = 'bowtie2 -x {} -t -f {} -S {} -p {} -a --quiet'.format(bowtie_indexes_path, read_sequences_fasta, output_alignment_results, cores_to_use)
-    print(align_command)
+    align_command = 'bowtie2 -x {} -f {} -S {} -p {} -a --quiet'.format(bowtie_indexes_path, read_sequences_fasta, output_alignment_results, cores_to_use)
     subprocess.run(align_command, shell=True)
 
     # Use files with the awk because windows is crazy
@@ -70,7 +69,7 @@ def run_alignment(fingerprinted_path, meta_info):
     genome_reads = inter_path(f"{meta_info['Sample']}_genome_bwt2_matches.sam")
     genome_no_reads = inter_path(f"{meta_info['Sample']}_genome_bwt2_no_matches.sam")
     hist_results = ''
-    if not Path(genome_reads).exists():
+    if not Path(genome_reads).exists() or True:
         if genome_file_path.exists():
             find_alignments(fingerprinted_path, meta_info['Genome fasta file'], f"{meta_info['Sample']}_genome")
             hist_results = correct_output_reads(genome_reads, genome_no_reads, meta_info, f"{meta_info['Sample']}_genome")
@@ -103,7 +102,7 @@ def sam_to_chunks(csv_file):
     chunks = pd.read_csv(csv_file,sep="\t",usecols=[0,1,2,3,4,9,11,12,13,15,16,17],header=None, chunksize=1000000)
     return chunks
 
-def correct_reads(matches_sam, output_name):
+def correct_reads(matches_sam, output_name, meta_info):
     '''
     # dictionary parsing reads
     reads = {}
@@ -129,6 +128,10 @@ def correct_reads(matches_sam, output_name):
     unique_reads = [read for read in reads if read.length == 1]
     non_unique_reads = [read fo]
     '''
+    genome = SeqIO.read(Path(meta_info['Genome fasta file']), "fasta")
+    refseq = genome.seq.upper()
+    is_reverse = refseq.find(meta_info['Spacer'].upper()) < 0
+
     col_names = "read_number, flag_sum, ref_genome, ref_genome_coordinate, mapq, read_sequence, AS, XN, XM, XG, NM, MD".split(", ")
     
     SAM_full = sam_to_chunks(matches_sam)
@@ -157,15 +160,34 @@ def correct_reads(matches_sam, output_name):
 
     corrected_coor = []
     orientation = []
-    for i,j in zip(histogram.ref_genome_coordinate, histogram.flag_sum):
-        if j == 0:
+    n=0
+    k=0
+    for i,j,m in zip(histogram.ref_genome_coordinate, histogram.flag_sum, histogram.read_sequence):
+        if (j%256) == 0:
             # j=0 means the FP was matched on the forward strand
-            corrected_coor.append(i + map_length)
-            orientation.append('RL')
-        else:
+            # j=256 means still forward strand, was a secondary alignment
+            if is_reverse:
+                corrected_coor.append(i+map_length-TSD)
+                orientation.append('LR')
+            else:
+                corrected_coor.append(i + map_length)
+                orientation.append('RL')
+            #n+=1
+            #if n < 8:
+            #    print("fw", i, i + map_length, m, j)
+        elif (j%256) % 16 ==0:
+            #k+=1
+            #if k < 8:
+            #    print("rev",i,i+TSD, m, j)
             # this means it was matched on the reverse complement
-            corrected_coor.append(i + TSD)
-            orientation.append('LR')
+            if is_reverse:
+                corrected_coor.append(i)
+                orientation.append('RL')
+            else:
+                corrected_coor.append(i + TSD)
+                orientation.append('LR')
+        else:
+            print("Unexpected flag sum:", j)
 
     histogram = histogram.assign(corrected_coor=corrected_coor, orientation=orientation)
     
@@ -192,7 +214,7 @@ def correct_output_reads(matches_sam, no_matches_sam, meta_info, output_name):
     donor_fp = meta_info['Donor sequence']
     spike_fp = meta_info['Spike in sequence']
 
-    histogram, unique_reads, non_unique_reads = correct_reads(matches_sam, output_name)
+    histogram, unique_reads, non_unique_reads = correct_reads(matches_sam, output_name, meta_info)
     
     fasta_sequence = []
     for i,j,k in zip(histogram.read_number,histogram.read_sequence,histogram.flag_sum):
