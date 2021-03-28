@@ -2,12 +2,11 @@
 
 echo "ECS Illumina pipeline running"
 
-$(aws ssm get-parameters --with-decryption --names NGS_PIPELINE_UNPROCESSED_SQS_URL |  jq -r '.Parameters| .[] | "export " + .Name + "=" + .Value ')
-
-echo "got thing $(NGS_PIPELINE_UNPROCESSED_SQS_URL)"
+git pull
+$(aws secretsmanager get-secret-value --secret-id NGS_PIPELINE_UNPROCESSED_SQS_URL |  jq -r '"export NGS_PIPELINE_UNPROCESSED_SQS_URL=" + .SecretString ')
+echo "got thing $NGS_PIPELINE_UNPROCESSED_SQS_URL"
 
 while [ /bin/true ]; do
-	$(git pull)
 
 	msg=$( \
       aws sqs receive-message \
@@ -24,10 +23,10 @@ while [ /bin/true ]; do
     else
 		echo "$(date) SQS Message: ${msg}"
 		sqs_message=$(echo "${msg}" | cut -f1 --)
-		echo "${sqs_message}" > Illumina-pipeline/sqs_message.json
+		echo "${sqs_message}" > ./sqs_message.json
 
 		receipt_handle=$(echo "${msg}" | cut -f2 --)
-		$(python3 Illumina-pipeline/test.py)
+		$(python3 ./test.py)
 		CMD_EXIT=$?
 
 		if [ $CMD_EXIT -eq 0 ]; then
@@ -36,7 +35,7 @@ while [ /bin/true ]; do
 			echo "FAILURE"
 		fi
 
-		rm Illumina-pipeline/sqs_message.json
+		rm ./sqs_message.json
 
 		aws sqs delete-message \
 			--queue-url $NGS_PIPELINE_UNPROCESSED_SQS_URL \
