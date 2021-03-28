@@ -12,7 +12,7 @@ RUN unzip awscliv2.zip
 RUN sudo ./aws/install
 
 RUN aws configure set default.region us-east-1
-RUN git clone https://github.com/sternberglab/Illumina-pipeline -y
+RUN git clone https://github.com/sternberglab/Illumina-pipeline
 RUN pip install -r Illumina-pipeline/requirements.txt
 
 CMD cd /root/Illumina-pipeline && /bin/bash ./ingestion.sh
