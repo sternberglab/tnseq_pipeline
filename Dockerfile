@@ -7,7 +7,7 @@ COPY . /root/pipeline
 RUN yum -y update
 RUN yum -y install python36 tar git
 RUN rm /usr/bin/python
-RUN ls -s /etc/alternatives/python3 /usr/bin/python
+RUN ln -s /etc/alternatives/python3 /usr/bin/python
 
 RUN aws configure set default.region $AWS_REGION
 RUN git clone https://github.com/sternberglab/Illumina-pipeline -y
