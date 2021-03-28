@@ -5,6 +5,8 @@ echo "ECS Illumina pipeline running"
 $(aws ssm get-parameters --with-decryption --names NGS_PIPELINE_UNPROCESSED_SQS_URL |  jq -r '.Parameters| .[] | "export " + .Name + "=" + .Value ')
 
 while [ /bin/true ]; do
+	$(sudo git pull)
+
 	msg=$( \
       aws sqs receive-message \
           --queue-url $NGS_PIPELINE_UNPROCESSED_SQS_URL \
