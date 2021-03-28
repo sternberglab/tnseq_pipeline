@@ -1,4 +1,4 @@
-FROM amazonlinux:1
+FROM amazonlinux:2
 
 ARG AWS_REGION
 
