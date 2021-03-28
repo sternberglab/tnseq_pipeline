@@ -15,4 +15,4 @@ RUN aws configure set default.region us-east-1
 RUN git clone https://github.com/sternberglab/Illumina-pipeline
 RUN pip3 install -r Illumina-pipeline/requirements.txt
 
-CMD cd /root/Illumina-pipeline && /bin/bash ./ingestion.sh
+CMD cd ./Illumina-pipeline && /bin/bash ./ingestion.sh
