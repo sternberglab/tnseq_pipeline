@@ -8,6 +8,6 @@ def main():
 	print(os.listdir())
 	#with open('sqs-message.json', 'r') as msg:
 	s3 = boto3.client('s3')
-	s3.upload_file('./sqs-message.json', 'sternberg-sequencing-data', 'test/test.py')
+	s3.upload_file('./sqs_message.json', 'sternberg-sequencing-data', 'test/test.py')
  
 main()
