@@ -28,7 +28,7 @@ while [ /bin/true ]; do
 		$(python3 Illumina-pipeline/test.py)
 		CMD_EXIT=$?
 
-		if [ $CMD_EXIT -eq 0 ]: then
+		if [ $CMD_EXIT -eq 0 ]; then
 			echo "SUCCESS"
 		else
 			echo "FAILURE"
