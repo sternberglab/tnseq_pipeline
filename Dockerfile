@@ -5,7 +5,7 @@ ARG AWS_REGION
 COPY . /root/pipeline
 
 RUN yum -y update
-RUN yum -y install python36 tar git
+RUN yum -y install python36 tar git unzip
 RUN rm /usr/bin/python
 RUN ln -s /etc/alternatives/python3 /usr/bin/python
 
