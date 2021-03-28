@@ -25,7 +25,7 @@ while [ /bin/true ]; do
 		echo "${sqs_message}" > Illumina-pipeline/sqs_message.json
 
 		receipt_handle=$(echo "${msg}" | cut -f2 --)
-		$(python Illumina-pipeline/test.py)
+		$(python3 Illumina-pipeline/test.py)
 		CMD_EXIT=$?
 
 		if [ $CMD_EXIT -eq 0 ]: then

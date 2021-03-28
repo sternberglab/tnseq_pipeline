@@ -4,8 +4,6 @@ ARG AWS_REGION
 
 RUN yum -y update
 RUN yum -y install python36 tar git unzip sudo
-RUN rm /usr/bin/python
-RUN ln -s /etc/alternatives/python3 /usr/bin/python
 
 RUN curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
 RUN unzip awscliv2.zip
@@ -13,6 +11,6 @@ RUN sudo ./aws/install
 
 RUN aws configure set default.region us-east-1
 RUN git clone https://github.com/sternberglab/Illumina-pipeline
-RUN pip install -r Illumina-pipeline/requirements.txt
+RUN pip3 install -r Illumina-pipeline/requirements.txt
 
 CMD cd /root/Illumina-pipeline && /bin/bash ./ingestion.sh
