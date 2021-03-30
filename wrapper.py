@@ -37,9 +37,6 @@ def wrapper():
 	):
 		if len(page['Items']):
 			item = page['Items'][0]
-	raise Exception(f"damn: {info}")
-	
-	
 
 	s3 = boto3.client('s3')
 	s3.upload_file('./sqs_message.json', 'sternberg-sequencing-data', 'test/test.py')
