@@ -9,10 +9,13 @@ from parameters import info_file, working_dir
 
 intermediates_dir = ''
 outputs_dir = ''
-def setup_paths(code):
+def setup_paths(code, isCloud):
 	global intermediates_dir
 	global outputs_dir
 	repo_dir = Path(__file__).parent.parent.absolute()
+	if isCloud:
+		working_dir = os.path.join(repo_dir, 'tmp')
+		os.makedirs(os.path.join(working_dir, 'raw'), exist_ok=True)
 	intermediates_dir = os.path.join(Path(working_dir), 'intermediates', code)
 	outputs_dir = os.path.join(repo_dir, 'outputs')
 	os.makedirs(intermediates_dir, exist_ok=True)

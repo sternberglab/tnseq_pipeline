@@ -1,11 +1,14 @@
 from pathlib import Path
 import os
 import csv
+import json
 import fnmatch
 import gzip
 import shutil
 from Bio import SeqIO
 import itertools
+import botocore
+import boto3
 
 from pipeline.utils import inter_path, update_log, output_path, setup_paths, get_info_for_sample
 
@@ -18,18 +21,38 @@ from pipeline.plasmid_plot import plot_plasmid
 
 from parameters import working_dir, Qscore_threshold, info_file, delete_intermediates
 
-def main():
-	if not Path(info_file).exists():
-		print("Could not find the info file with sample information, see the parameters.py file")
-		return
+def get_samples_to_process(isCloud):
+	if not isCloud:
+		unzip_files()
+		# if running locally use this path
+		if not Path(info_file).exists():
+			print("Could not find the info file with sample information, see the parameters.py file")
+			return
+		samples_to_process = []
+		with open(Path(info_file), 'r', encoding='utf-8-sig') as opened_info_file:
+			reader = csv.DictReader(opened_info_file)
+			samples_to_process = [row for row in reader]
+		return samples_to_process
 
-	# First unzip any zip files (deletes the zips if "delete_intermediates" is true)
-	unzip_files()
+	# if on aws load from the sqs json and download the data files from s3
+	with open('./sqs_message.json', 'r') as info_file:
+		info = json.load(info_file)
+	setup_paths(info['Sample'], isCloud)
+	# if in cloud download the s3 files to the container
+	if isCloud:
+		s3 = boto3.client('s3')
+		for item in s3.list_objects(Bucket='sternberg-sequencing-data', Prefix=f"ngs_data/basespace/{info['analysisId']}/{info['Sample']}")['Contents']:
+			key = item['Key']
+			filename = key.split('/')[-1]
+			if 'R2_001.fastq' in filename:
+				s3.download_file('sternberg-sequencing-data', key, f'./tmp/raw/{filename}')
 
-	samples_to_process = []
-	with open(Path(info_file), 'r', encoding='utf-8-sig') as opened_info_file:
-		reader = csv.DictReader(opened_info_file)
-		samples_to_process = [row for row in reader]
+	# Then unzip any zip files (deletes the zips if "delete_intermediates" is true)
+	unzip_files(isCloud=True)
+	return [info]
+
+def main(isCloud=False):
+	samples_to_process = get_samples_to_process(isCloud)
 
 	for sample_info in samples_to_process:
 		sample = sample_info['Sample']
@@ -43,7 +66,6 @@ def main():
 		print("PROCESSING SAMPLE {}...".format(sample))
 		print('----------')
 		print('----------')
-		setup_paths(sample)
 
 		log_info = {'Sample': sample, 'Qscore Threshold': str(Qscore_threshold)}
 
@@ -57,7 +79,7 @@ def main():
 		# Skip the processing if the output files already exist
 		if not Path(histogram_path).exists() or True:
 			# step 1: process raw files, concatenate
-			raw_files_dir = os.path.join(Path(working_dir), 'raw')
+			raw_files_dir = os.path.join(Path(working_dir), 'raw') if not isCloud else './tmp/raw'
 			filtered_path = inter_path('{}_FILTERED.fastq'.format(sample))
 			filenames = [path.resolve() for path in Path(raw_files_dir).glob(sample + '*.fastq')]
 			if len(filenames) < 1:
@@ -86,5 +108,8 @@ def main():
 	
 	if delete_intermediates:
 		shutil.rmtree(Path(inter_path('')).parent.absolute())
+		
+	return log_info
 
-main()
+if __name__== "__main__":
+	main()

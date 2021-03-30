@@ -25,13 +25,11 @@ Qscore_threshold = 20
 
 
 # 2. FOR FINGERPRINTING
-
 # The length of the fingerprint to match
 fingerprint_length = 17
 
 
 # 3. FOR MAPPING
-
 # The number of bases duplicated by transposon insertion
 transposon_site_duplication_length = 5
 

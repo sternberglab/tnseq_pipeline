@@ -4,7 +4,6 @@ echo "ECS Illumina pipeline running"
 
 git pull
 $(aws secretsmanager get-secret-value --secret-id NGS_PIPELINE_UNPROCESSED_SQS_URL |  jq -r '"export NGS_PIPELINE_UNPROCESSED_SQS_URL=" + .SecretString ')
-echo "got thing $NGS_PIPELINE_UNPROCESSED_SQS_URL"
 
 while [ /bin/true ]; do
 

@@ -38,8 +38,10 @@ def process_files(code, input_filenames, filtered_path):
     print("Read {} total records, {} filtered records ({}%) in {} seconds".format(total_records, passing_filter, percent_passing, elapsed))
     return {'Total Raw Reads': total_records, 'Filtered Reads': passing_filter}
 
-def unzip_files():
+def unzip_files(isCloud=False):
     raw_files_dir = os.path.join(Path(working_dir), 'raw')
+    if isCloud:
+        raw_files_dir = os.path.join(Path(__file__).parent.parent.absolute(), 'tmp', 'raw')
     zip_files = Path(raw_files_dir).glob('*.zip')
     for zipped in zip_files:
         with zipfile.ZipFile(zipped.resolve(), 'r') as zip_ref:
