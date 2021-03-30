@@ -37,8 +37,7 @@ def wrapper():
 	):
 		if len(page['Items']):
 			item = page['Items'][0]
-	if not item: 
-		raise Exception(f"damn: {info}")
+	raise Exception(f"damn: {info}")
 	
 	
 

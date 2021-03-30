@@ -53,7 +53,7 @@ def get_samples_to_process(isCloud):
 
 def main(isCloud=False):
 	samples_to_process = get_samples_to_process(isCloud)
-
+	raise Exception(samples_to_process)
 	for sample_info in samples_to_process:
 		sample = sample_info['Sample']
 		meta_info = get_info_for_sample(sample)
