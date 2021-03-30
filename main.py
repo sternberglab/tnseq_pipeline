@@ -53,13 +53,10 @@ def get_samples_to_process(isCloud):
 
 def main(isCloud=False):
 	samples_to_process = get_samples_to_process(isCloud)
-	raise Exception(samples_to_process)
+
 	for sample_info in samples_to_process:
 		sample = sample_info['Sample']
-		meta_info = get_info_for_sample(sample)
-		if not meta_info:
-			print("Sample {} not found in the info file, skipping processing".format(sample))
-			continue
+		meta_info = sample_info if isCloud else get_info_for_sample(sample)
 
 		print('----------')
 		print('----------')
