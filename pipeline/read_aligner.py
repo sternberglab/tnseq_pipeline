@@ -78,7 +78,6 @@ def run_alignment(fingerprinted_path, meta_info):
 
     elapsed_time = round(time.perf_counter() - start, 2)
     print("Genome histogram data exists ({} seconds)".format(elapsed_time))
-
     # Turn genome_no_reads sam file to fasta format to run against the plasmid
     genome_no_reads_fasta = inter_path("{}.fasta".format(Path(genome_no_reads).stem))
     sam_to_fasta(genome_no_reads, genome_no_reads_fasta)

@@ -46,6 +46,10 @@ def get_samples_to_process(isCloud):
 			filename = key.split('/')[-1]
 			if 'R2_001.fastq' in filename:
 				s3.download_file('sternberg-sequencing-data', key, f'./tmp/raw/{filename}')
+		if info['Genome']:
+			s3.download_file('sternberg-sequencing-data', f'bioinformatic_resources/genomes/{info['Genome']}', f'./tmp/{info['Genome']}')
+		if info['Plasmid']:
+			s3.download_file('sternberg-sequencing-data', f'bioinformatic_resources/plasmids/{info['Plasmid']}', f'./tmp/{info['Plasmid']}')
 
 	# Then unzip any zip files (deletes the zips if "delete_intermediates" is true)
 	unzip_files(isCloud=True)
@@ -57,6 +61,9 @@ def main(isCloud=False):
 	for sample_info in samples_to_process:
 		sample = sample_info['Sample']
 		meta_info = sample_info if isCloud else get_info_for_sample(sample)
+		if isCloud:
+			meta_info['Genome'] = os.path.join(Path(__file__).parent.absolute(), 'tmp', meta_info['Genome'])
+			meta_info['Plasmid'] = os.path.join(Path(__file__).parent.absolute(), 'tmp', meta_info['Plasmid'])
 
 		print('----------')
 		print('----------')
