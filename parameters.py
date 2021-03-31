@@ -47,4 +47,4 @@ genome_bin_size = 5000
 low_reads_cap_percent = 0.50
 
 # Run parameters for transposition distance histogram
-on_target_window = 100
+on_target_window = 200
