@@ -25,7 +25,7 @@ while [ /bin/true ]; do
 		echo "${sqs_message}" > ./sqs_message.json
 
 		receipt_handle=$(echo "${msg}" | cut -f2 --)
-		$(python3 ./wrapper.py)
+		python3 ./wrapper.py
 		CMD_EXIT=$?
 
 		if [ $CMD_EXIT -eq 0 ]; then
