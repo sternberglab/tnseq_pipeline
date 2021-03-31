@@ -7,7 +7,7 @@ RUN yum -y install python37 tar git unzip sudo jq
 RUN curl -O https://bootstrap.pypa.io/get-pip.py
 RUN python3 get-pip.py --user
 
-RUN curl -O https://github.com/BenLangmead/bowtie2/releases/download/v2.4.2/bowtie2-2.4.2-linux-x86_64.zip
+RUN curl -OLS https://github.com/BenLangmead/bowtie2/releases/download/v2.4.2/bowtie2-2.4.2-linux-x86_64.zip
 RUN ls
 RUN unzip bowtie2-2.4.2-linux-x86_64.zip && sudo cp bowtie2-2.4.2-linux-x86_64/* /usr/local/bin 
 
