@@ -95,9 +95,9 @@ def plot_binned(filepath, run_information, yAxis_type, isPlasmid=False):
     psl = run_information['pCascade #']
     exp_date = run_information['Experiment date']
     spacer_locations = [int(loc) for loc in run_information['End of protospacer'].split()]
-    genome_path = run_information['Genome fasta file']
+    genome_path = run_information['Genome']
     if isPlasmid:
-        genome_path = run_information['Plasmid fasta file']
+        genome_path = run_information['Plasmid']
     genome_length = len(SeqIO.read(Path(genome_path), 'fasta'))
     bin_scale = int(100000/genome_bin_size)
     bin_size = genome_bin_size

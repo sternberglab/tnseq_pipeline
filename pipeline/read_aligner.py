@@ -63,15 +63,15 @@ def run_alignment(fingerprinted_path, meta_info):
     print("Running alignment mapping...")
     start = time.perf_counter()
 
-    genome_file_path = Path(meta_info['Genome fasta file'])
-    plasmid_file_path = Path(meta_info['Plasmid fasta file'])
+    genome_file_path = Path(meta_info['Genome'])
+    plasmid_file_path = Path(meta_info['Plasmid'])
 
     genome_reads = inter_path(f"{meta_info['Sample']}_genome_bwt2_matches.sam")
     genome_no_reads = inter_path(f"{meta_info['Sample']}_genome_bwt2_no_matches.sam")
     hist_results = ''
     if not Path(genome_reads).exists() or True:
         if genome_file_path.exists():
-            find_alignments(fingerprinted_path, meta_info['Genome fasta file'], f"{meta_info['Sample']}_genome")
+            find_alignments(fingerprinted_path, meta_info['Genome'], f"{meta_info['Sample']}_genome")
             hist_results = correct_output_reads(genome_reads, genome_no_reads, meta_info, f"{meta_info['Sample']}_genome")
         else:
             print("No genome fasta provided in the info csv, skipping genome alignment")
@@ -83,12 +83,12 @@ def run_alignment(fingerprinted_path, meta_info):
     genome_no_reads_fasta = inter_path("{}.fasta".format(Path(genome_no_reads).stem))
     sam_to_fasta(genome_no_reads, genome_no_reads_fasta)
 
-    if len(meta_info['Plasmid fasta file']) > 1:
+    if len(meta_info['Plasmid']) > 1:
         plasmid_reads = inter_path("plasmid_bwt2_matches.sam").format(meta_info['Sample'])
         plasmid_no_reads = inter_path("plasmid_bwt2_no_matches.sam").format(meta_info['Sample'])
         if not Path(plasmid_reads).exists():
             if plasmid_file_path.exists():
-                find_alignments(genome_no_reads_fasta, meta_info['Plasmid fasta file'], f"{meta_info['Sample']}_plasmid")
+                find_alignments(genome_no_reads_fasta, meta_info['Plasmid'], f"{meta_info['Sample']}_plasmid")
                 correct_output_reads(plasmid_reads, plasmid_no_reads, meta_info, f"{meta_info['Sample']}_plasmid")
             else:
                 print("No plasmid fasta provided in the csv, skipping plasmid alignment")
@@ -127,7 +127,7 @@ def correct_read(genome_coord, read_is_fw_strand, spacer_is_fw_strand, corrected
         orientation.append(read_orient)
 
 def correct_reads(matches_sam, output_name, meta_info):
-    genome = SeqIO.read(Path(meta_info['Genome fasta file']), "fasta")
+    genome = SeqIO.read(Path(meta_info['Genome']), "fasta")
     refseq = genome.seq.upper()
     spacer_is_fw_strand = refseq.find(meta_info['Spacer'].upper()) >= 0
 

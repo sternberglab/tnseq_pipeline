@@ -203,7 +203,7 @@ def make_trans_dist_plot(readsCsv, run_information):
 
     # map spacer to refseq and determine query window
     code = run_information['Sample']
-    genome_path = run_information['Genome fasta file']
+    genome_path = run_information['Genome']
     genome_length = len(SeqIO.read(Path(genome_path), 'fasta'))
     desc = run_information['Information for graphs']
     psl = run_information['pCascade #']

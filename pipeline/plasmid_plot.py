@@ -85,7 +85,7 @@ def plot_binned(filepath, run_information, yAxis_type, isPlasmid=False):
     exp_date = run_information['Experiment date']
     spacer_locations = [int(loc) for loc in run_information['End of protospacer'].split()]
 
-    genome_path = run_information['Plasmid fasta file']
+    genome_path = run_information['Plasmid']
     genome_length = len(SeqIO.read(Path(genome_path), 'fasta'))
         
     bin_scale = int(genome_length // 500)
@@ -148,7 +148,7 @@ def plot_binned(filepath, run_information, yAxis_type, isPlasmid=False):
     plt.close()  # closes the matplotlib preview popup window
 
 def plot_section(csvFile, meta_info, spacerSeq, name):
-    genome_path = meta_info['Plasmid fasta file']
+    genome_path = meta_info['Plasmid']
     genome = SeqIO.read(Path(genome_path), 'fasta')
 
     spacerEnd = genome.seq.upper().find(spacerSeq) + len(spacerSeq)
