@@ -8,7 +8,7 @@ RUN curl -O https://bootstrap.pypa.io/get-pip.py
 RUN python3 get-pip.py --user
 
 RUN curl -OLS https://github.com/BenLangmead/bowtie2/releases/download/v2.4.2/bowtie2-2.4.2-linux-x86_64.zip
-RUN unzip bowtie2-2.4.2-linux-x86_64.zip && sudo chmod -R 777 bowtie2-2.4.2-linux-x86_64
+RUN unzip bowtie2-2.4.2-linux-x86_64.zip && sudo chmod -Rvp 777 bowtie2-2.4.2-linux-x86_64
 
 RUN sudo cp bowtie2-2.4.2-linux-x86_64/* /usr/local/bin/
 
