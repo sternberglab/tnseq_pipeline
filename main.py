@@ -63,7 +63,8 @@ def main(isCloud=False):
 		meta_info = sample_info if isCloud else get_info_for_sample(sample)
 		if isCloud:
 			meta_info['Genome'] = os.path.join(Path(__file__).parent.absolute(), 'tmp', meta_info['Genome'])
-			meta_info['Plasmid'] = os.path.join(Path(__file__).parent.absolute(), 'tmp', meta_info['Plasmid'])
+			if meta_info['Plasmid']:
+				meta_info['Plasmid'] = os.path.join(Path(__file__).parent.absolute(), 'tmp', meta_info['Plasmid'])
 
 		print('----------')
 		print('----------')
