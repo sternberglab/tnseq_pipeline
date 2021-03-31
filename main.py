@@ -47,9 +47,9 @@ def get_samples_to_process(isCloud):
 			if 'R2_001.fastq' in filename:
 				s3.download_file('sternberg-sequencing-data', key, f'./tmp/raw/{filename}')
 		if info['Genome']:
-			s3.download_file('sternberg-sequencing-data', f'bioinformatic_resources/genomes/{info['Genome']}', f'./tmp/{info['Genome']}')
+			s3.download_file('sternberg-sequencing-data', f"bioinformatic_resources/genomes/{info['Genome']}", f"./tmp/{info['Genome']}")
 		if info['Plasmid']:
-			s3.download_file('sternberg-sequencing-data', f'bioinformatic_resources/plasmids/{info['Plasmid']}', f'./tmp/{info['Plasmid']}')
+			s3.download_file('sternberg-sequencing-data', f"bioinformatic_resources/plasmids/{info['Plasmid']}", f"./tmp/{info['Plasmid']}")
 
 	# Then unzip any zip files (deletes the zips if "delete_intermediates" is true)
 	unzip_files(isCloud=True)
