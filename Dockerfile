@@ -9,8 +9,8 @@ RUN python3 get-pip.py --user
 
 RUN curl -OLS https://github.com/BenLangmead/bowtie2/releases/download/v2.4.2/bowtie2-2.4.2-linux-x86_64.zip
 RUN unzip bowtie2-2.4.2-linux-x86_64.zip
-RUN ls
-RUN sudo cp bowtie2-2.4.2-linux-x86_64/* /usr/local/bin 
+
+RUN sudo cp bowtie2-2.4.2-linux-x86_64/* /usr/local/bin 2>/dev/null
 
 RUN curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
 RUN unzip awscliv2.zip
