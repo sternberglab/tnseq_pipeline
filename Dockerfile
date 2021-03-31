@@ -7,7 +7,9 @@ RUN yum -y install python37 tar git unzip sudo jq
 RUN curl -O https://bootstrap.pypa.io/get-pip.py
 RUN python3 get-pip.py --user
 
-RUN curl -O https://github.com/BenLangmead/bowtie2/releases/download/v2.4.2/bowtie2-2.4.2-linux-x86_64.zip && unzip bowtie2-2.4.2-linux-x86_64.zip && sudo cp bowtie2-2.4.2-linux-x86_64/* /usr/local/bin 
+RUN curl -O https://github.com/BenLangmead/bowtie2/releases/download/v2.4.2/bowtie2-2.4.2-linux-x86_64.zip
+RUN ls
+RUN unzip bowtie2-2.4.2-linux-x86_64.zip && sudo cp bowtie2-2.4.2-linux-x86_64/* /usr/local/bin 
 
 RUN curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
 RUN unzip awscliv2.zip
