@@ -40,7 +40,9 @@ log_fieldnames = [
 	'Undigested Donor Reads', 
 	'Spike-in Reads',
 	'CRISPR Array Self-Targeting Reads',
-	'Analysis Date'
+	'Analysis Date',
+	'Unique Plasmid-Mapping Reads',
+	'Total Plasmid-Mapping Reads'
 ]
 
 def update_log(data):
@@ -53,7 +55,7 @@ def update_log(data):
 	log_path = os.path.join(outputs_dir, 'output_log.csv')
 	if not Path(log_path).exists():
 		with open(log_path, 'w') as csvfile:
-			writer = csv.DictWriter(csvfile, fieldnames=log_fieldnames)
+			writer = csv.DictWriter(csvfile, fieldnames=log_fieldnames, extrasaction='ignore')
 			writer.writeheader()
 			writer.writerow(data)
 
