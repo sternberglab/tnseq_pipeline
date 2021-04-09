@@ -131,9 +131,9 @@ def correct_reads(matches_sam, output_name, meta_info):
     spacer_is_fw_strand = refseq.find(meta_info['Spacer'].upper()) >= 0
 
     if spacer_is_fw_strand:
-        meta_info['SpacerStartRefSeq'] = f'fw_{refseq.find(meta_info['Spacer'].upper())}'
+        meta_info['SpacerStartRefSeq'] = f"fw_{refseq.find(meta_info['Spacer'].upper())}"
     else:
-        meta_info['SpacerStartRefSeq'] = f'rv_{len(genome.seq) - genome.seq.reverse_complement().find(meta_info['Spacer'].upper())}'
+        meta_info['SpacerStartRefSeq'] = f"rv_{len(genome.seq) - genome.seq.reverse_complement().find(meta_info['Spacer'].upper())}"
 
     col_names = "read_number, flag_sum, ref_genome, ref_genome_coordinate, mapq, read_sequence, AS, XN, XM, XG, NM, MD".split(", ")
     
