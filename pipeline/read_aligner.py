@@ -130,6 +130,11 @@ def correct_reads(matches_sam, output_name, meta_info):
     refseq = genome.seq.upper()
     spacer_is_fw_strand = refseq.find(meta_info['Spacer'].upper()) >= 0
 
+    if spacer_is_fw_strand:
+        meta_info['SpacerStartRefSeq'] = f'fw_{refseq.find(meta_info['Spacer'].upper())}'
+    else:
+        meta_info['SpacerStartRefSeq'] = f'rv_{len(genome.seq) - genome.seq.reverse_complement().find(meta_info['Spacer'].upper())}'
+
     col_names = "read_number, flag_sum, ref_genome, ref_genome_coordinate, mapq, read_sequence, AS, XN, XM, XG, NM, MD".split(", ")
     
     SAM_full = sam_to_chunks(matches_sam)
@@ -233,13 +238,18 @@ def correct_output_reads(matches_sam, no_matches_sam, meta_info, output_name):
 
     unique_reads_seq_count = len(unique_reads.read_number.unique())
     non_unique_reads_seq_count = len(non_unique_reads.read_number.unique())
-    output = {
-        'Unique Genome-Mapping Reads': unique_reads_seq_count,
-        'Total Genome-Mapping Reads': non_unique_reads_seq_count + unique_reads_seq_count,
-        'Undigested Donor Reads': donor_matches,
-        'Spike-in Reads': spike_matches,
-        'CRISPR Array Self-Targeting Reads': cripsr_seq_matches
-    }
+    output = {}
     if 'genome' in output_name:
-        print(output)
+        output = {
+            'Unique Genome-Mapping Reads': unique_reads_seq_count,
+            'Total Genome-Mapping Reads': non_unique_reads_seq_count + unique_reads_seq_count,
+            'Undigested Donor Reads': donor_matches,
+            'Spike-in Reads': spike_matches,
+            'CRISPR Array Self-Targeting Reads': cripsr_seq_matches
+        }
+    elif 'plasmid' in output_name:
+        output = {
+            'Unique Plasmid-Mapping Reads': unique_reads_seq_count,
+            'Total Plasmid-Mapping Reads': non_unique_reads_seq_count + unique_reads_seq_count
+        }
     return output
