@@ -1,5 +1,6 @@
 from pathlib import Path
 import os
+import copy
 import csv
 import json
 import fnmatch
@@ -61,6 +62,7 @@ def main(isCloud=False):
 	for sample_info in samples_to_process:
 		sample = sample_info['Sample']
 		meta_info = sample_info if isCloud else get_info_for_sample(sample)
+		original_input = copy.deepcopy(meta_info)
 		if isCloud:
 			meta_info['Genome'] = os.path.join(Path(__file__).parent.absolute(), 'tmp', meta_info['Genome'])
 			if meta_info['Plasmid']:
@@ -73,7 +75,7 @@ def main(isCloud=False):
 		print('----------')
 
 
-		log_info = {'Sample': sample, 'Qscore Threshold': str(Qscore_threshold), 'Input Parameters': meta_info}
+		log_info = {'Sample': sample, 'Qscore Threshold': str(Qscore_threshold), 'Input Parameters': original_input}
 
 		# Start at the end to avoid repeating steps with saved results
 		histogram_path = output_path(os.path.join('samples', "{}_genome_read_locations.csv".format(sample)))
