@@ -60,7 +60,7 @@ def update_log(data):
 	else:
 		tempfile = NamedTemporaryFile(mode='w', delete=False)
 		with open(log_path, 'r') as csvfile, tempfile:
-			reader = csv.DictReader(csvfile, fieldnames=log_fieldnames)
+			reader = csv.DictReader(csvfile, fieldnames=log_fieldnames, extrasaction='ignore')
 			writer = csv.DictWriter(tempfile, fieldnames=log_fieldnames)
 			found = False
 
