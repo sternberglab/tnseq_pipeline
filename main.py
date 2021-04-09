@@ -72,7 +72,8 @@ def main(isCloud=False):
 		print('----------')
 		print('----------')
 
-		log_info = {'Sample': sample, 'Qscore Threshold': str(Qscore_threshold)}
+
+		log_info = {'Sample': sample, 'Qscore Threshold': str(Qscore_threshold), 'Input Parameters': meta_info}
 
 		# Start at the end to avoid repeating steps with saved results
 		histogram_path = output_path(os.path.join('samples', "{}_genome_read_locations.csv".format(sample)))
