@@ -45,8 +45,7 @@ def get_samples_to_process(isCloud):
 		for item in s3.list_objects(Bucket='sternberg-sequencing-data', Prefix=f"ngs_data/basespace/{info['analysisId']}/{info['Sample']}")['Contents']:
 			key = item['Key']
 			filename = key.split('/')[-1]
-			if 'R2_001.fastq' in filename:
-				s3.download_file('sternberg-sequencing-data', key, f'./tmp/raw/{filename}')
+			s3.download_file('sternberg-sequencing-data', key, f'./tmp/raw/{filename}')
 		if info['Genome']:
 			s3.download_file('sternberg-sequencing-data', f"bioinformatic_resources/genomes/{info['Genome']}", f"./tmp/{info['Genome']}")
 		if info['Plasmid']:
@@ -85,7 +84,7 @@ def main(isCloud=False):
 		fp_path = inter_path("{}_FINGERPRINTED.fasta".format(sample))
 
 		# Skip the processing if the output files already exist
-		if not Path(histogram_path).exists() or True:
+		if not Path(histogram_path).exists():
 			# step 1: process raw files, concatenate
 			raw_files_dir = os.path.join(Path(working_dir), 'raw') if not isCloud else './tmp/raw'
 			filtered_path = inter_path('{}_FILTERED.fastq'.format(sample))
