@@ -36,8 +36,8 @@ def get_samples_to_process(isCloud):
 		return samples_to_process
 
 	# if on aws load from the sqs json and download the data files from s3
-	with open('./sqs_message.json', 'r') as info_file:
-		info = json.load(info_file)
+	with open('./sqs_message.json', 'r') as info_json:
+		info = json.load(info_json)
 	setup_paths(info['Sample'], isCloud)
 	# if in cloud download the s3 files to the container
 	if isCloud:
