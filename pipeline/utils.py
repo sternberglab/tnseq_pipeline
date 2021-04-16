@@ -13,10 +13,11 @@ def setup_paths(code, isCloud):
 	global intermediates_dir
 	global outputs_dir
 	repo_dir = Path(__file__).parent.parent.absolute()
+	working = working_dir
 	if isCloud:
-		working_dir = os.path.join(repo_dir, 'tmp')
-		os.makedirs(os.path.join(working_dir, 'raw'), exist_ok=True)
-	intermediates_dir = os.path.join(Path(working_dir), 'intermediates', code)
+		working = os.path.join(repo_dir, 'tmp')
+		os.makedirs(os.path.join(working, 'raw'), exist_ok=True)
+	intermediates_dir = os.path.join(Path(working), 'intermediates', code)
 	outputs_dir = os.path.join(repo_dir, 'outputs')
 	os.makedirs(intermediates_dir, exist_ok=True)
 	os.makedirs(os.path.join(outputs_dir, 'samples'), exist_ok=True)

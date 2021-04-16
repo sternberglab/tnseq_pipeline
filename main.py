@@ -60,6 +60,7 @@ def main(isCloud=False):
 
 	for sample_info in samples_to_process:
 		sample = sample_info['Sample']
+		setup_paths(sample, isCloud)
 		meta_info = sample_info if isCloud else get_info_for_sample(sample)
 		original_input = copy.deepcopy(meta_info)
 		if isCloud:
@@ -82,7 +83,6 @@ def main(isCloud=False):
 		
 		filtered_path = inter_path('{}_FILTERED.fastq'.format(sample))
 		fp_path = inter_path("{}_FINGERPRINTED.fasta".format(sample))
-
 		# Skip the processing if the output files already exist
 		if not Path(histogram_path).exists():
 			# step 1: process raw files, concatenate
