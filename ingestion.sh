@@ -5,6 +5,9 @@ echo "ECS Illumina pipeline running"
 git pull
 $(aws secretsmanager get-secret-value --secret-id NGS_PIPELINE_UNPROCESSED_SQS_URL |  jq -r '"export NGS_PIPELINE_UNPROCESSED_SQS_URL=" + .SecretString ')
 
+LOG_FILENAME="logs_$(date +"%Y_%m_%d_%I_%M_%p").txt"
+touch LOG_FILENAME
+
 while [ /bin/true ]; do
 
 	msg=$( \
@@ -25,7 +28,7 @@ while [ /bin/true ]; do
 		echo "${sqs_message}" > ./sqs_message.json
 
 		receipt_handle=$(echo "${msg}" | cut -f2 --)
-		python3 ./wrapper.py
+		python3 ./wrapper.py >> LOG_FILENAME
 		CMD_EXIT=$?
 
 		if [ $CMD_EXIT -eq 0 ]; then
@@ -41,4 +44,6 @@ while [ /bin/true ]; do
 			--receipt-handle ${receipt_handle}
 	fi
 done
+
+$(aws s3 cp LOG_FILENAME s3://sternberg-sequencing-data/ngs_pipeline_outputs/tmp_logs/${LOG_FILENAME})
 exit
