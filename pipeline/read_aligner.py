@@ -101,26 +101,41 @@ def sam_to_chunks(csv_file):
     chunks = pd.read_csv(csv_file,sep="\t",usecols=[0,1,2,3,4,9,11,12,13,15,16,17],header=None, chunksize=1000000)
     return chunks
 
-def correct_read(genome_coord, read_is_fw_strand, spacer_is_fw_strand, corrected_coor, orientation):
+
+def correct_read(genome_coord, read_is_fw_strand, spacer_is_fw_strand, corrected_coor, orientation, spacer_coord):
     if read_is_fw_strand:
         # j=0 means the FP was matched on the forward strand
         # j=256 means still forward strand, was a secondary alignment
+        # READ HERE: CODE THAT ASSIGNS RL/LR AND T'RL/T'LR AND GENOMIC COORDINATES
         if not spacer_is_fw_strand:
-            coord = genome_coord + map_length - TSD
+            if spacer_coord > (
+                    genome_coord + map_length - TSD):  # if T-LR and spacer on reverse strand, read on FW strand, need spacer coord to be greater than read coord
+                coord = genome_coord + map_length - TSD
+            else:
+                coord = genome_coord + map_length
             read_orient = 'LR'
         else:
-            coord = genome_coord + map_length
+            if spacer_coord < (genome_coord + map_length):
+                coord = genome_coord + map_length
+            else:
+                coord = genome_coord + map_length - TSD
             read_orient = 'RL'
         corrected_coor.append(coord)
         orientation.append(read_orient)
-    
+
     # this means it was matched on the reverse complement
     else:
         if not spacer_is_fw_strand:
-            coord = genome_coord
+            if spacer_coord > genome_coord:
+                coord = genome_coord
+            else:
+                coord = genome_coord + TSD
             read_orient = 'RL'
         else:
-            coord = genome_coord + TSD
+            if spacer_coord < genome_coord:
+                coord = genome_coord + TSD
+            else:
+                coord = genome_coord
             read_orient = 'LR'
         corrected_coor.append(coord)
         orientation.append(read_orient)
@@ -129,7 +144,9 @@ def correct_reads(matches_sam, output_name, meta_info):
     genome = SeqIO.read(Path(meta_info['Genome']), "fasta")
     refseq = genome.seq.upper()
     spacer_is_fw_strand = refseq.find(meta_info['Spacer'].upper()) >= 0
-
+    #spacer_coord = int(meta_info['End of protospacer'])
+    spacer_coord = int(refseq.find(meta_info['Spacer'])) + len(meta_info['Spacer'])
+    print(spacer_coord)
     if spacer_is_fw_strand:
         meta_info['SpacerStartRefSeq'] = f"fw_{refseq.find(meta_info['Spacer'].upper())}"
     else:
@@ -145,7 +162,7 @@ def correct_reads(matches_sam, output_name, meta_info):
         unique_read_numbers += list(chunk_unique_read_numbers.index)
 
         if len(set(unique_read_numbers)) != len(unique_read_numbers):
-            print("Annoying, there was a duplicate between chunks, finding and liminating it now...")
+            print("Annoying, there was a duplicate between chunks, finding and eliminating it now...")
             unique_read_numbers = [num for num in unique_read_numbers if unique_read_numbers.count(num) == 1]
 
     unique_reads = pd.DataFrame(columns=col_names)
@@ -172,15 +189,19 @@ def correct_reads(matches_sam, output_name, meta_info):
             # so their "actual" flank sequence read would be the opposite
             # strand of the detected one
             read_is_fw_strand = not read_is_fw_strand
-        correct_read(i, read_is_fw_strand, spacer_is_fw_strand, corrected_coor, orientation)
+        correct_read(i, read_is_fw_strand, spacer_is_fw_strand, corrected_coor, orientation, spacer_coord)
 
     histogram = histogram.assign(corrected_coor=corrected_coor, orientation=orientation)
     
     RL_counts = histogram[histogram.orientation == 'RL'].corrected_coor.value_counts().sort_index(0)
+    #pRL_counts = histogram[histogram.orientation == 'pRL'].corrected_coor.value_counts().sort_index(0)
     LR_counts = histogram[histogram.orientation == 'LR'].corrected_coor.value_counts().sort_index(0)
+    #pLR_counts = histogram[histogram.orientation == 'pLR'].corrected_coor.value_counts().sort_index(0)
     totals = histogram.corrected_coor.value_counts().sort_index(0)
     RL_counts.name = "RL"
     LR_counts.name = "LR"
+    #pRL_counts.name = "pRL"
+    #pLR_counts.name = 'pLR'
     totals.name = 'reads'
 
     # Decrement to make the counts all the exact same as what Biopython sequence.seq.find() would give
@@ -190,6 +211,8 @@ def correct_reads(matches_sam, output_name, meta_info):
     combine.index -= 1
     combine["RL"] = combine["RL"].fillna(0)
     combine["LR"] = combine["LR"].fillna(0)
+    #combine["pRL"] = combine["pRL"].fillna(0)
+    #combine["pLR"] = combine["pLR"].fillna(0)
     
     hist_path = output_path(os.path.join('samples', "{}_read_locations.csv".format(output_name)))
     combine.to_csv(hist_path)
