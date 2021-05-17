@@ -5,7 +5,7 @@ echo "ECS Illumina pipeline running"
 git pull
 $(aws secretsmanager get-secret-value --secret-id NGS_PIPELINE_UNPROCESSED_SQS_URL |  jq -r '"export NGS_PIPELINE_UNPROCESSED_SQS_URL=" + .SecretString ')
 
-LOG_FILENAME="logs_"$(date +'%Y_%m_%d_%I_%M_%p_$RANDOM')".txt"
+LOG_FILENAME="logs_"$(date +'%Y_%m_%d_%T_${RANDOM}')".txt"
 echo "${LOG_FILENAME}"
 touch "${LOG_FILENAME}"
 echo "Starting processing samples" >> "${LOG_FILENAME}"
