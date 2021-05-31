@@ -16,7 +16,7 @@ def fpgen(input_reads, meta_info):  # generator function that returns
     if read_type not in ["fragment", "restriction"]:
         raise "Read type must be 'fragment' or 'restriction'"
 
-    tn_end_sequence = meta_info["tn_end_sequence"]
+    tn_end_sequence = meta_info["tn_end_sequence"].upper()
 
     tn_end_length = len(tn_end_sequence)
     for record in SeqIO.parse(input_reads, "fastq"):
