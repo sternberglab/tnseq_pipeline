@@ -10,7 +10,7 @@ import heapq
 import time
 
 from parameters import info_file, fig_size_inches, genome_bin_size, low_reads_cap_percent, plots_filetype, plots_dpi
-from pipeline.utils import output_path, get_log_entry
+from .utils import output_path, get_log_entry
 
 plt.rcParams['svg.fonttype'] = 'none'  # important so that text stays as intact characters in the output
 plt.rcParams['font.sans-serif'] = "Arial"
