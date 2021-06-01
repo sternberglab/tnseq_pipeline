@@ -103,6 +103,7 @@ def sam_to_chunks(csv_file):
 
 
 def correct_read(genome_coord, read_is_fw_strand, spacer_is_fw_strand, corrected_coor, orientation, spacer_coord):
+
     if read_is_fw_strand:
         # j=0 means the FP was matched on the forward strand
         # j=256 means still forward strand, was a secondary alignment
@@ -129,13 +130,13 @@ def correct_read(genome_coord, read_is_fw_strand, spacer_is_fw_strand, corrected
             if spacer_coord > genome_coord:
                 coord = genome_coord
             else:
-                coord = genome_coord #+ TSD
+                coord = genome_coord + TSD
             read_orient = 'RL'
         else:
             if spacer_coord < genome_coord:
                 coord = genome_coord + TSD
             else:
-                coord = genome_coord + TSD #added + TSD
+                coord = genome_coord
             read_orient = 'LR'
         corrected_coor.append(coord)
         orientation.append(read_orient)
@@ -146,7 +147,21 @@ def correct_reads(matches_sam, output_name, meta_info):
     spacer_is_fw_strand = refseq.find(meta_info['Spacer'].upper()) >= 0
     #spacer_coord = int(meta_info['End of protospacer'])
     spacer_coord = int(refseq.find(meta_info['Spacer'])) + len(meta_info['Spacer'])
+
+
+    #print(int(refseq.find(meta_info['Spacer'])))
+    #print(len(meta_info['Spacer']))
+
+
+    if spacer_is_fw_strand:
+        spacer_coord = int(refseq.find(meta_info['Spacer'])) + len(meta_info['Spacer'])
+        meta_info['SpacerStartRefSeq'] = f"fw_{refseq.find(meta_info['Spacer'].upper())}"
+    else:
+        spacer_coord = len(genome.seq) - genome.seq.reverse_complement().find(meta_info['Spacer'].upper())
+        meta_info['SpacerStartRefSeq'] = f"rv_{len(genome.seq) - genome.seq.reverse_complement().find(meta_info['Spacer'].upper())}"
+
     print(spacer_coord)
+
     if spacer_is_fw_strand:
         meta_info['SpacerStartRefSeq'] = f"fw_{refseq.find(meta_info['Spacer'].upper())}"
     else:
