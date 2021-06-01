@@ -126,13 +126,13 @@ def correct_read(genome_coord, read_is_fw_strand, spacer_is_fw_strand, corrected
     # this means it was matched on the reverse complement
     else:
         if not spacer_is_fw_strand:
-            if spacer_coord > genome_coord:
+            if spacer_coord and spacer_coord > genome_coord:
                 coord = genome_coord
             else:
                 coord = genome_coord + TSD
             read_orient = 'RL'
         else:
-            if spacer_coord < genome_coord:
+            if spacer_coord and spacer_coord < genome_coord:
                 coord = genome_coord + TSD
             else:
                 coord = genome_coord
@@ -143,10 +143,10 @@ def correct_read(genome_coord, read_is_fw_strand, spacer_is_fw_strand, corrected
 def correct_reads(matches_sam, output_name, meta_info):
     genome = SeqIO.read(Path(meta_info['Genome']), "fasta")
     refseq = genome.seq.upper()
+    rev_refseq = genome.seq.reverse_complement().upper()
     spacer_is_fw_strand = refseq.find(meta_info['Spacer'].upper()) >= 0
     #spacer_end_coord = int(meta_info['End of protospacer'])
     spacer_seq = meta_info['Spacer'].upper()
-
     if spacer_is_fw_strand:
         if refseq.find(spacer_seq) >= 0:
             spacer_end_coord = int(refseq.find(spacer_seq)) + len(spacer_seq)
@@ -155,15 +155,15 @@ def correct_reads(matches_sam, output_name, meta_info):
             spacer_end_coord = None
             meta_info['SpacerStartRefSeq'] = None
     else:
-        if genome.seq.reverse_complement().find(spacer_seq) >= 0:
-            spacer_end_coord = len(genome.seq) - genome.seq.reverse_complement().find(spacer_seq) - len(spacer_seq)
-            meta_info['SpacerStartRefSeq'] = f"rv_{len(genome.seq) - genome.seq.reverse_complement().find(spacer_seq)}"
+        if rev_refseq.find(spacer_seq) >= 0:
+            spacer_end_coord = len(genome.seq) - rev_refseq.find(spacer_seq) - len(spacer_seq)
+            meta_info['SpacerStartRefSeq'] = f"rv_{len(genome.seq) - rev_refseq.find(spacer_seq)}"
         else: 
             spacer_end_coord = None
             meta_info['SpacerStartRefSeq'] = None
-
-    col_names = "read_number, flag_sum, ref_genome, ref_genome_coordinate, mapq, read_sequence, AS, XN, XM, XG, NM, MD".split(", ")
     
+    col_names = "read_number, flag_sum, ref_genome, ref_genome_coordinate, mapq, read_sequence, AS, XN, XM, XG, NM, MD".split(", ")
+
     SAM_full = sam_to_chunks(matches_sam)
     unique_read_numbers = []
     for chunk in SAM_full:
