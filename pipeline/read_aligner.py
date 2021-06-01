@@ -108,14 +108,14 @@ def correct_read(genome_coord, read_is_fw_strand, spacer_is_fw_strand, corrected
         # j=256 means still forward strand, was a secondary alignment
         # READ HERE: CODE THAT ASSIGNS RL/LR AND T'RL/T'LR AND GENOMIC COORDINATES
         if not spacer_is_fw_strand:
-            if spacer_coord > (
+            if spacer_coord and spacer_coord > (
                     genome_coord + map_length - TSD):  # if T-LR and spacer on reverse strand, read on FW strand, need spacer coord to be greater than read coord
                 coord = genome_coord + map_length - TSD
             else:
                 coord = genome_coord + map_length
             read_orient = 'LR'
         else:
-            if spacer_coord < (genome_coord + map_length):
+            if spacer_coord and spacer_coord < (genome_coord + map_length):
                 coord = genome_coord + map_length
             else:
                 coord = genome_coord + map_length - TSD
@@ -148,11 +148,19 @@ def correct_reads(matches_sam, output_name, meta_info):
     spacer_seq = meta_info['Spacer'].upper()
 
     if spacer_is_fw_strand:
-        spacer_end_coord = int(refseq.find(spacer_seq)) + len(spacer_seq)
-        meta_info['SpacerStartRefSeq'] = f"fw_{spacer_seq)}"
+        if refseq.find(spacer_seq) >= 0:
+            spacer_end_coord = int(refseq.find(spacer_seq)) + len(spacer_seq)
+            meta_info['SpacerStartRefSeq'] = f"fw_{refseq.find(spacer_seq)}"
+        else: 
+            spacer_end_coord = None
+            meta_info['SpacerStartRefSeq'] = None
     else:
-        spacer_end_coord = len(genome.seq) - genome.seq.reverse_complement().find(spacer_seq) - len(spacer_seq)
-        meta_info['SpacerStartRefSeq'] = f"rv_{len(genome.seq) - genome.seq.reverse_complement().find(spacer_seq))}"
+        if genome.seq.reverse_complement().find(spacer_seq) >= 0:
+            spacer_end_coord = len(genome.seq) - genome.seq.reverse_complement().find(spacer_seq) - len(spacer_seq)
+            meta_info['SpacerStartRefSeq'] = f"rv_{len(genome.seq) - genome.seq.reverse_complement().find(spacer_seq)}"
+        else: 
+            spacer_end_coord = None
+            meta_info['SpacerStartRefSeq'] = None
 
     col_names = "read_number, flag_sum, ref_genome, ref_genome_coordinate, mapq, read_sequence, AS, XN, XM, XG, NM, MD".split(", ")
     
