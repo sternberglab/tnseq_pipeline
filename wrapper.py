@@ -39,7 +39,6 @@ def wrapper():
 			item = page['Items'][0]
 
 	s3 = boto3.client('s3')
-	s3.upload_file('./sqs_message.json', 'sternberg-sequencing-data', 'test/test.py')
  
 	metadata = main(isCloud=True)
 	dynamo.update_item(
