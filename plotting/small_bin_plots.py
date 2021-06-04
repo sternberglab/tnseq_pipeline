@@ -1,3 +1,4 @@
+from __future__ import absolute_import
 import matplotlib
 import numpy as np
 import matplotlib.pyplot as plt
@@ -10,7 +11,7 @@ import heapq
 import time
 
 from parameters import info_file, fig_size_inches, genome_bin_size, low_reads_cap_percent, plots_filetype, plots_dpi
-from .utils import output_path, get_log_entry
+from pipeline.utils import output_path, get_log_entry
 
 plt.rcParams['svg.fonttype'] = 'none'  # important so that text stays as intact characters in the output
 plt.rcParams['font.sans-serif'] = "Arial"
@@ -163,7 +164,7 @@ meta = {
     'End of protospacer': '335151'
 }
 # path to the output csv of read locations
-genome_reads_csv_path = './genome_read_locations.csv'
+genome_reads_csv_path = '../genome_read_locations.csv'
 # x boundaries for the graph, as from the genome refseq numbers
 x_boundaries = [335000, 336000]
 # raw, normalized, or zoomed
