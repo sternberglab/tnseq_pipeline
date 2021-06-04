@@ -195,8 +195,8 @@ def correct_reads(matches_sam, output_name, meta_info):
     for i,j,m in zip(histogram.ref_genome_coordinate, histogram.flag_sum, histogram.read_sequence):
         read_is_fw_strand = j%256 == 0
         if meta_info['read_type'] == 'fragment':
-            # fragmentation reads use the RC of the flank sequence, 
-            # so their "actual" flank sequence read would be the opposite
+            # fragmentation reads use the RC of the tn_end sequence, 
+            # so their "actual" tn_end sequence read would be the opposite
             # strand of the detected one
             read_is_fw_strand = not read_is_fw_strand
         correct_read(i, read_is_fw_strand, spacer_is_fw_strand, corrected_coor, orientation, spacer_end_coord)
