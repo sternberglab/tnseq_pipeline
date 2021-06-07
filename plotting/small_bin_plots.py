@@ -44,7 +44,7 @@ def setup_axes(axs, min_x, max_x, max_y, genome_length, bin_size):
     
     x_axis_size = int(genome_length / bin_size)
 
-    x_ticks = [r for r in range(0, x_axis_size, int(increment / bin_size)) if r >= (x_boundaries[0])/bin_size and r<=(genome_length-x_boundaries[1])/bin_size]
+    x_ticks = [r for r in range(0, x_axis_size, int(increment / bin_size)) if r >= (x_boundaries[0])/bin_size and r<=(x_boundaries[1])/bin_size]
     axs.set_xticks(x_ticks)
     x_tick_labels = [round(r, 2) for r in np.arange(x_boundaries[0]/1000, (x_boundaries[1]) / 1000, increment / 1000)]
     axs.set_xticklabels(x_tick_labels)
