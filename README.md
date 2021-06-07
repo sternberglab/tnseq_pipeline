@@ -35,7 +35,7 @@ At a minimum, you will need to change the values in `parameters.py`:
 - Set `working_dir` to a directory containing a `raw` subfolder with either the zipped or raw fastq files from your Illumina runs. 
 - Set `info_file` to point to the information csv file with meta information about each sample run. There is an example of the required format for this csv in `inputs/experiment_info`, you can choose to modify that file and use it directly or make a new csv with the same columns and have the `info_file` path point to it. 
 
-The information CSV file must exist in the specific format with information about each sample being analyzed. For each sample, the minimum required fields are `Sample`, `read_type` (either "restriction" or "fragment"), `flank_sequence`, `Spacer`, and `Genome` (a full path to the fasta file). 
+The information CSV file must exist in the specific format with information about each sample being analyzed. For each sample, the minimum required fields are `Sample`, `read_type` (either "restriction" or "fragment"), `tn_end_sequence`, `Spacer`, and `Genome` (a full path to the fasta file). 
 
 Adding `CRISPR Array Sequence`, `Donor sequence` and `Spike in sequence` will generate additional statistics and, if plasmid fasta file is also provided, plots. 
 
