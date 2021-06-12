@@ -23,8 +23,8 @@ def fpgen(input_reads, meta_info):  # generator function that returns
         found = record.seq.find(tn_end_sequence)
         if found > -1:
             if read_type == 'restriction':
+                if found < 21 and found >= fingerprint_length:
                 # restriction reads for forward, found before the R tn_end sequence
-                if found >= fingerprint_length:
                     fingerprint = record.seq[found - fingerprint_length:found]
                     newrec = SeqRecord(fingerprint, id=record.id, name=record.name)
                     yield newrec
@@ -44,7 +44,7 @@ def fpgen(input_reads, meta_info):  # generator function that returns
             while 0 <= i <= (len(record.seq) - tn_end_length):
                 query = record.seq[i:i+tn_end_length]
                 if hamming_dist(query, tn_end_sequence) < 2:
-                    if i >= fingerprint_length:
+                    if i >= fingerprint_length and i < 21:
                         fingerprint = record.seq[i - fingerprint_length:i]
                         newrec = SeqRecord(fingerprint, id=record.id, name=record.name)
                         yield newrec

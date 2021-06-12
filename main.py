@@ -92,7 +92,7 @@ def main(isCloud=False):
 			if len(filenames) < 1:
 				print("COULD NOT FIND ANY FASTA FILES FOR THE SAMPLE")
 				continue
-			process_results = process_files(sample, filenames, filtered_path)
+			process_results = process_files(sample, filenames, filtered_path, meta_info)
 			log_info.update(process_results)
 
 			# step 2: fingerprint the reads

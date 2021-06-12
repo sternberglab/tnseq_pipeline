@@ -25,10 +25,31 @@ def filtergen(files, threshold):  # generator function that returns edited reads
                                    description=record.description, letter_annotations=record.letter_annotations)
                 yield newrec
 
-def process_files(code, input_filenames, filtered_path):
+def process_files(code, input_filenames, filtered_path, meta_info):
     print("Processing and quality filtering {} files...".format(len(input_filenames)))
     start = time.perf_counter()
     passing_filter = 0
+
+    # find the read_end (R1 or R2) with the tn_end_sequence and only look at it
+    read_end = None
+    tn_end_seq = meta_info['tn_end_sequence'].upper()
+    r1 = next((f for f in input_filenames if 'R1' in f.name), None)
+    r1ct = 0
+    if r1:
+        with open(r1, 'r') as f_in:
+            r1ct = f_in.read().count(tn_end_seq)
+    r2 = next((f for f in input_filenames if 'R2' in f.name), None)
+    if r2:
+        with open(r2, 'r') as f_in:
+            r2ct = f_in.read().count(tn_end_seq)
+    if r1 and r2:
+        if r1ct > r2ct:
+            read_end = 'R1'
+        else:
+            read_end = 'R2'
+
+    if read_end:
+        input_filenames = [f for f in input_filenames if read_end in f.name]
     
     with open(filtered_path, 'w+') as filtered_outfile:
         passing_filter = SeqIO.write(filtergen(input_filenames, Qscore_threshold), filtered_outfile, "fastq")
