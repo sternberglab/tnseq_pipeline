@@ -206,7 +206,7 @@ def make_trans_dist_plot(readsCsv, run_information):
     genome_path = run_information['Genome']
     genome_length = len(SeqIO.read(Path(genome_path), 'fasta'))
     desc = run_information['Information for graphs']
-    psl = run_information['pCascade #']
+    psl = run_information.get('pCascade #', None)
     description = run_information['Description']
     spacer = run_information['Spacer'].upper()
     exp_date = run_information['Experiment date']
@@ -224,7 +224,6 @@ def make_trans_dist_plot(readsCsv, run_information):
     else:
         print("ERROR - Spacer not found within RefSeq")
         return
-
     all_reads = []
     with open(readsCsv, 'r', encoding='utf-8-sig') as f:
         reader = csv.DictReader(f)
@@ -272,7 +271,7 @@ def make_trans_dist_plot(readsCsv, run_information):
             axs.spines['bottom'].set_position('zero')
             axs.spines['left'].set_bounds(0, max_y)
             axs.set_xticks([40, 42, 45, 50, 55, 60])
-            axs.set_xticklabels([40, 0, 45, 50, 55, 60])
+            axs.set_xticklabels([40, 42, 45, 50, 55, 60])
             axs.set_yticks([0, max_y])
             axs.set_yticklabels([0, max_y])
             axs.set_xlim(left=42, right=58) ## Change window here

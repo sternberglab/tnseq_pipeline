@@ -27,11 +27,10 @@ def find_alignments(read_sequences_fasta, genome_fasta, output_filename):
 
     cores = multiprocessing.cpu_count()
     cores_to_use = max(1, cores-1)
-    bowtie_indexes_path = Path(inter_path("genomes/{}".format(genome_fasta_path.stem)))
+    bowtie_indexes_path = Path(inter_path("genomes/{}".format(genome_fasta_path.stem))).resolve()
     os.makedirs(bowtie_indexes_path.parent.resolve(), exist_ok=True)
-    
-    build_command = 'bowtie2-build "{}" "{}" -q'.format(genome_fasta_path.resolve(), bowtie_indexes_path)
-    subprocess.run(build_command, shell=True)
+    build_command = 'bowtie2-build "{}" "{}"'.format(genome_fasta_path.resolve(), bowtie_indexes_path)
+    subprocess.run(build_command, shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
     output_alignment_results = inter_path("{}_bwt2_full.sam".format(output_filename))
     align_command = 'bowtie2 -x {} -f {} -S {} -p {} -a --quiet'.format(bowtie_indexes_path, read_sequences_fasta, output_alignment_results, cores_to_use)
@@ -256,8 +255,11 @@ def correct_output_reads(matches_sam, no_matches_sam, meta_info, output_name):
     col_names = "read_number, flag_sum, ref_genome, ref_genome_coordinate, mapq, read_sequence, AS, XN, XM, XG, NM, MD".split(", ")
     no_match_sequences.columns = col_names
 
-    crispr_array_seq = Seq(meta_info['CRISPR Array Sequence']).upper()
-    crispr_array_seq_rc = crispr_array_seq.reverse_complement()
+    crispr_array_seq = meta_info.get('CRISPR Array Sequence', None)
+    crispr_array_seq_rc = None
+    if crispr_array_seq:
+        crispr_array_seq = Seq(meta_info['CRISPR Array Sequence']).upper() if 'CRISPR Array Sequence' in meta_info else None
+        crispr_array_seq_rc = crispr_array_seq.reverse_complement() if crispr_array_seq else None
     donor_matches = 0
     spike_matches = 0
     cripsr_seq_matches = 0

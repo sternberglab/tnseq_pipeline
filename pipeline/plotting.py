@@ -90,10 +90,10 @@ def plot_binned(filepath, run_information, yAxis_type, isPlasmid=False):
     # 1. "raw" - the raw counts of reads in each bin
     # 2. "normalized" - by percentage of total reads
     # 3. "zoomed" - a normalized graph that is zoomed in at the y-axis to show low-frequence bins
-    code = run_information['Sample']
-    desc = run_information['Information for graphs']
-    psl = run_information['pCascade #']
-    exp_date = run_information['Experiment date']
+    code = run_information.get('Sample', None)
+    desc = run_information.get('Information for graphs', None)
+    psl = run_information.get('pCascade #', None)
+    exp_date = run_information.get('Experiment date', None)
     spacer_locations = [int(loc) for loc in run_information['End of protospacer'].split()]
     genome_path = run_information['Genome']
     if isPlasmid:
@@ -101,7 +101,7 @@ def plot_binned(filepath, run_information, yAxis_type, isPlasmid=False):
     genome_length = len(SeqIO.read(Path(genome_path), 'fasta'))
     bin_scale = int(100000/genome_bin_size)
     bin_size = genome_bin_size
-    if isPlasmid:
+    if isPlasmid or genome_length < 100000:
         bin_scale = int(genome_length // 200)
         bin_size = 100
     
