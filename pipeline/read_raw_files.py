@@ -3,6 +3,7 @@ from Bio.SeqRecord import SeqRecord
 import time
 import gzip
 import shutil
+from itertools import chain
 import os
 import zipfile
 from pathlib import Path
@@ -59,18 +60,20 @@ def process_files(code, input_filenames, filtered_path, meta_info):
     print("Read {} total records, {} filtered records ({}%) in {} seconds".format(total_records, passing_filter, percent_passing, elapsed))
     return {'Total Raw Reads': total_records, 'Filtered Reads': passing_filter}
 
-def unzip_files(isCloud=False):
+def unzip_files(sample=None, isCloud=False):
+    # unzips files for a given sample
+    # Files should be in the 'raw' directory, either in a folder starting
+    # with the sample id, or a filename starting with the sample id
     raw_files_dir = os.path.join(Path(working_dir), 'raw')
     if isCloud:
         raw_files_dir = os.path.join(Path(__file__).parent.parent.absolute(), 'tmp', 'raw')
-    zip_files = Path(raw_files_dir).glob('*.zip')
+    raw_path = Path(raw_files_dir)
+    zip_files = list(chain(raw_path.glob(f'{sample}*.zip'), raw_path.glob(f'**/{sample}*/*.zip')))
     for zipped in zip_files:
         with zipfile.ZipFile(zipped.resolve(), 'r') as zip_ref:
             zip_ref.extractall(raw_files_dir)
-        if delete_intermediates:
-            os.remove(zipped)
 
-    gzip_files = Path(raw_files_dir).glob('*.gz')
+    gzip_files = list(chain(raw_path.glob(f'{sample}*.gz'), raw_path.glob(f'**/{sample}*/*.gz')))
     for zipped in gzip_files:
         if Path(str(zipped.resolve())[:-3]).exists():
             continue
