@@ -68,12 +68,11 @@ def run_alignment(fingerprinted_path, meta_info):
     genome_reads = inter_path(f"{meta_info['Sample']}_genome_bwt2_matches.sam")
     genome_no_reads = inter_path(f"{meta_info['Sample']}_genome_bwt2_no_matches.sam")
     hist_results = ''
-    if not Path(genome_reads).exists() or True:
-        if genome_file_path.exists():
-            find_alignments(fingerprinted_path, meta_info['Genome'], f"{meta_info['Sample']}_genome")
-            hist_results = correct_output_reads(genome_reads, genome_no_reads, meta_info, f"{meta_info['Sample']}_genome")
-        else:
-            print("No genome fasta provided in the info csv, skipping genome alignment")
+    if genome_file_path.exists():
+        find_alignments(fingerprinted_path, meta_info['Genome'], f"{meta_info['Sample']}_genome")
+        hist_results = correct_output_reads(genome_reads, genome_no_reads, meta_info, f"{meta_info['Sample']}_genome")
+    else:
+        print("No genome fasta provided in the info csv, skipping genome alignment")
 
     elapsed_time = round(time.perf_counter() - start, 2)
     print("Genome histogram data exists ({} seconds)".format(elapsed_time))

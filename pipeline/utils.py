@@ -80,19 +80,30 @@ def update_log(data):
 
 def get_log_entry(sample, qscore):
 	log_path = os.path.join(outputs_dir, '..', 'output_log.csv')
-	if not Path(log_path).exists():
-		print("Couldn't find the log file")
-		return
-	with open(log_path, 'r') as csvfile:
-		reader = csv.DictReader(csvfile, fieldnames=log_fieldnames)
-		for row in reader:
-			if row['Sample'] == sample and row['Qscore Threshold'] == qscore:
-				return row
+	return get_row_from_csv(sample, log_path, qscore)
 
 def get_info_for_sample(sample):
-	with open(Path(info_file), 'r', encoding='utf-8-sig') as csvfile:
-		reader = csv.DictReader(csvfile)
-		for row in reader:
-			if row['Sample'] == sample:
-				return row
-	return
+	return get_row_from_csv(sample, info_file)
+
+def get_row_from_csv(sample, filepath, qscore=None):
+	if not Path(filepath).exists():
+		print(f"Couldn't find the file {filepath}")
+		return
+	result = None
+	try:
+		with open(Path(filepath), 'r', encoding='utf-8-sig') as csvfile:
+			reader = csv.DictReader(csvfile)
+			for row in reader:
+				if row['Sample'] == sample:
+					if not qscore or row['Qscore Threshold'] == qscore:
+						result = row
+						break
+	except:
+		with open(Path(filepath), 'r', encoding='ISO-8859-1') as csvfile:
+			reader = csv.DictReader(csvfile)
+			for row in reader:
+				if row['Sample'] == sample:
+					if not qscore or row['Qscore Threshold'] == qscore:
+						result = row
+						break
+	return result
