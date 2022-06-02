@@ -1,4 +1,4 @@
-This repository contains the code for interpreting and analyzing Illumina sequencing data. 
+This repository contains the code for interpreting and analyzing Illumina sequencing data for mapping transposon insertion events. 
 
 An "outputs" folder is created in this directory with generated plots and CSV files of reads for each processed sample. 
 
