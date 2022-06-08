@@ -16,37 +16,41 @@ import time
 from .utils import inter_path, output_path
 from parameters import fingerprint_length as map_length, transposon_site_duplication_length as TSD
 
-def find_alignments(read_sequences_fasta, genome_fasta, output_filename):
+def find_alignments(read_sequences_fasta, target_fasta, output_filename):
     print("Find alignments for {}".format(output_filename))
 
-    genome_fasta_path = Path(genome_fasta)
-    if not genome_fasta_path.exists():
-        print("Source sequence file not found at {}".format(genome_fasta))
+    target_fasta_path = Path(target_fasta)
+    if not target_fasta_path.exists():
+        print("Source sequence file not found at {}".format(target_fasta))
     if not Path(read_sequences_fasta).exists():
         print("Read sequences file not found at {}".format(read_sequences_fasta))
 
     cores = multiprocessing.cpu_count()
     cores_to_use = max(1, cores-1)
-    bowtie_indexes_path = Path(inter_path("genomes/{}".format(genome_fasta_path.stem))).resolve()
+    bowtie_indexes_path = Path(inter_path("genomes/{}".format(target_fasta_path.stem))).resolve()
     os.makedirs(bowtie_indexes_path.parent.resolve(), exist_ok=True)
-    build_command = 'bowtie2-build "{}" "{}"'.format(genome_fasta_path.resolve(), bowtie_indexes_path)
+    build_command = 'bowtie2-build "{}" "{}"'.format(target_fasta_path.resolve(), bowtie_indexes_path)
     subprocess.run(build_command, shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
     output_alignment_results = inter_path("{}_bwt2_full.sam".format(output_filename))
     align_command = 'bowtie2 -x {} -f {} -S {} -p {} -a --quiet'.format(bowtie_indexes_path, read_sequences_fasta, output_alignment_results, cores_to_use)
     subprocess.run(align_command, shell=True)
 
-    # Use files with the awk because windows is crazy
-    # about escaping characters in shell commands
-    no_matches_cmd_path = Path('./awk_commands/no_matches')
-    matches_cmd_path = Path('./awk_commands/yes_matches')
-
     matches_output_path = inter_path("{}_bwt2_matches.sam".format(output_filename))
     no_matches_output_path = inter_path("{}_bwt2_no_matches.sam".format(output_filename))
-    make_matches_command = '''awk -f {} {} > {}'''.format(matches_cmd_path, output_alignment_results, matches_output_path)
-    make_no_matches_command = '''awk -f {} {} > {}'''.format(no_matches_cmd_path, output_alignment_results, no_matches_output_path)
-    subprocess.run(make_matches_command, shell=True)
-    subprocess.run(make_no_matches_command, shell=True)
+    matches_output_file = open(matches_output_path, 'w')
+    no_matches_output_file = open(no_matches_output_path, 'w')
+    with open(output_alignment_results, 'r') as full_sam:
+        for line in full_sam:
+            if line[0] == '@':
+                continue
+            if 'NM:i:0' in line:
+                matches_output_file.write(line)
+            else:
+                no_matches_output_file.write(line)
+
+    matches_output_file.close()
+    no_matches_output_file.close()
     return
 
 def sam_to_fasta(sam_path, fasta_path):
@@ -62,36 +66,37 @@ def run_alignment(fingerprinted_path, meta_info):
     print("Running alignment mapping...")
     start = time.perf_counter()
 
-    genome_file_path = Path(meta_info['Genome'])
-    plasmid_file_path = Path(meta_info['Plasmid'])
+    target_file = meta_info['Target fasta file']
+    target_file_path = Path(target_file)
+    second_target_file = meta_info['Second target fasta file']
+    second_target_file_path = Path(second_target_file)
 
-    genome_reads = inter_path(f"{meta_info['Sample']}_genome_bwt2_matches.sam")
-    genome_no_reads = inter_path(f"{meta_info['Sample']}_genome_bwt2_no_matches.sam")
+    target_reads = inter_path(f"{meta_info['Sample']}_target_bwt2_matches.sam")
+    target_no_reads = inter_path(f"{meta_info['Sample']}_target_bwt2_no_matches.sam")
     hist_results = ''
-    if genome_file_path.exists():
-        find_alignments(fingerprinted_path, meta_info['Genome'], f"{meta_info['Sample']}_genome")
-        hist_results = correct_output_reads(genome_reads, genome_no_reads, meta_info, f"{meta_info['Sample']}_genome")
+    if len(target_file):
+        find_alignments(fingerprinted_path, target_file_path, f"{meta_info['Sample']}_target")
+        hist_results = correct_output_reads(target_reads, target_no_reads, meta_info, f"{meta_info['Sample']}_target")
     else:
-        print("No genome fasta provided in the info csv, skipping genome alignment")
+        print("No target fasta provided in the info csv, skipping genome alignment")
 
     elapsed_time = round(time.perf_counter() - start, 2)
-    print("Genome histogram data exists ({} seconds)".format(elapsed_time))
-    # Turn genome_no_reads sam file to fasta format to run against the plasmid
-    genome_no_reads_fasta = inter_path("{}.fasta".format(Path(genome_no_reads).stem))
-    sam_to_fasta(genome_no_reads, genome_no_reads_fasta)
+    print("Target histogram data created ({} seconds)".format(elapsed_time))
+    # Turn target_no_reads sam file to fasta format to run against the second target
+    target_no_reads_fasta = inter_path("{}.fasta".format(Path(target_no_reads).stem))
+    sam_to_fasta(target_no_reads, target_no_reads_fasta)
 
-    if len(meta_info['Plasmid']) > 1:
-        plasmid_reads = inter_path("plasmid_bwt2_matches.sam").format(meta_info['Sample'])
-        plasmid_no_reads = inter_path("plasmid_bwt2_no_matches.sam").format(meta_info['Sample'])
-        if not Path(plasmid_reads).exists():
-            if plasmid_file_path.exists():
-                find_alignments(genome_no_reads_fasta, meta_info['Plasmid'], f"{meta_info['Sample']}_plasmid")
-                correct_output_reads(plasmid_reads, plasmid_no_reads, meta_info, f"{meta_info['Sample']}_plasmid")
-            else:
-                print("No plasmid fasta provided in the csv, skipping plasmid alignment")
+    if len(second_target_file):
+        second_target_reads = inter_path("second_target_bwt2_matches.sam").format(meta_info['Sample'])
+        second_target_no_reads = inter_path("second_target_bwt2_no_matches.sam").format(meta_info['Sample'])
+        if second_target_file_path.exists():
+            find_alignments(target_no_reads_fasta, second_target_file_path, f"{meta_info['Sample']}_second_target")
+            correct_output_reads(second_target_reads, second_target_no_reads, meta_info, f"{meta_info['Sample']}_second_target")
+        else:
+            print("No second target fasta provided in the csv, skipping second target alignment")
     
         elapsed_time = round(time.perf_counter() - start, 2)
-        print("Plasmid histogram data exists ({} seconds)".format(elapsed_time))
+        print("Second target histogram data exists ({} seconds)".format(elapsed_time))
 
     return hist_results
 
@@ -139,7 +144,7 @@ def correct_read(genome_coord, read_is_fw_strand, spacer_is_fw_strand, corrected
         orientation.append(read_orient)
 
 def correct_reads(matches_sam, output_name, meta_info):
-    genome = SeqIO.read(Path(meta_info['Genome']), "fasta")
+    genome = SeqIO.read(Path(meta_info['Target fasta file']), "fasta")
     refseq = genome.seq.upper()
     rev_refseq = genome.seq.reverse_complement().upper()
     spacer_is_fw_strand = refseq.find(meta_info['Spacer'].upper()) >= 0
@@ -178,9 +183,9 @@ def correct_reads(matches_sam, output_name, meta_info):
     for chunk in sam_to_chunks(matches_sam):
         chunk.columns = col_names
         chunk_unique_reads = chunk[chunk.read_number.isin(unique_read_numbers)]
-        unique_reads = unique_reads.append(chunk_unique_reads)
+        unique_reads = pd.concat([unique_reads, chunk_unique_reads])
         chunk_non_unique_reads = chunk[np.logical_not(chunk.read_number.isin(unique_read_numbers))]
-        non_unique_reads = non_unique_reads.append(chunk_non_unique_reads)
+        non_unique_reads = pd.concat([non_unique_reads, chunk_non_unique_reads])
 
     #Get the corrected integration coordinate
 
@@ -200,16 +205,12 @@ def correct_reads(matches_sam, output_name, meta_info):
         correct_read(i, read_is_fw_strand, spacer_is_fw_strand, corrected_coor, orientation, spacer_end_coord)
 
     histogram = histogram.assign(corrected_coor=corrected_coor, orientation=orientation)
-    
-    RL_counts = histogram[histogram.orientation == 'RL'].corrected_coor.value_counts().sort_index(0)
-    #pRL_counts = histogram[histogram.orientation == 'pRL'].corrected_coor.value_counts().sort_index(0)
-    LR_counts = histogram[histogram.orientation == 'LR'].corrected_coor.value_counts().sort_index(0)
-    #pLR_counts = histogram[histogram.orientation == 'pLR'].corrected_coor.value_counts().sort_index(0)
-    totals = histogram.corrected_coor.value_counts().sort_index(0)
+
+    RL_counts = histogram[histogram.orientation == 'RL'].corrected_coor.value_counts().sort_index()
+    LR_counts = histogram[histogram.orientation == 'LR'].corrected_coor.value_counts().sort_index()
+    totals = histogram.corrected_coor.value_counts().sort_index()
     RL_counts.name = "RL"
     LR_counts.name = "LR"
-    #pRL_counts.name = "pRL"
-    #pLR_counts.name = 'pLR'
     totals.name = 'reads'
 
     # Decrement to make the counts all the exact same as what Biopython sequence.seq.find() would give
@@ -219,8 +220,6 @@ def correct_reads(matches_sam, output_name, meta_info):
     combine.index -= 1
     combine["RL"] = combine["RL"].fillna(0)
     combine["LR"] = combine["LR"].fillna(0)
-    #combine["pRL"] = combine["pRL"].fillna(0)
-    #combine["pLR"] = combine["pLR"].fillna(0)
     
     hist_path = output_path(os.path.join('samples', "{}_read_locations.csv".format(output_name)))
     combine.to_csv(hist_path)
@@ -273,17 +272,17 @@ def correct_output_reads(matches_sam, no_matches_sam, meta_info, output_name):
     unique_reads_seq_count = len(unique_reads.read_number.unique())
     non_unique_reads_seq_count = len(non_unique_reads.read_number.unique())
     output = {}
-    if 'genome' in output_name:
+    if 'second' not in output_name:
         output = {
-            'Unique Genome-Mapping Reads': unique_reads_seq_count,
-            'Total Genome-Mapping Reads': non_unique_reads_seq_count + unique_reads_seq_count,
+            'Unique Target Mapping Reads': unique_reads_seq_count,
+            'Total Target Mapping Reads': non_unique_reads_seq_count + unique_reads_seq_count,
             'Undigested Donor Reads': donor_matches,
             'Spike-in Reads': spike_matches,
             'CRISPR Array Self-Targeting Reads': cripsr_seq_matches
         }
-    elif 'plasmid' in output_name:
+    elif 'second' in output_name:
         output = {
-            'Unique Plasmid-Mapping Reads': unique_reads_seq_count,
-            'Total Plasmid-Mapping Reads': non_unique_reads_seq_count + unique_reads_seq_count
+            'Unique Second Target Mapping Reads': unique_reads_seq_count,
+            'Total Second Target Mapping Reads': non_unique_reads_seq_count + unique_reads_seq_count
         }
     return output

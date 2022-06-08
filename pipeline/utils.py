@@ -5,7 +5,7 @@ from tempfile import NamedTemporaryFile
 import shutil
 from datetime import datetime
 
-from parameters import info_file, working_dir
+from parameters import info_file, read_files_dir
 
 intermediates_dir = ''
 outputs_dir = ''
@@ -13,11 +13,10 @@ def setup_paths(code, isCloud):
 	global intermediates_dir
 	global outputs_dir
 	repo_dir = Path(__file__).parent.parent.absolute()
-	working = working_dir
 	if isCloud:
 		working = os.path.join(repo_dir, 'tmp')
 		os.makedirs(os.path.join(working, 'raw'), exist_ok=True)
-	intermediates_dir = os.path.join(Path(working), 'intermediates', code)
+	intermediates_dir = os.path.join(repo_dir, 'intermediates', code)
 	outputs_dir = os.path.join(repo_dir, 'outputs')
 	os.makedirs(intermediates_dir, exist_ok=True)
 	os.makedirs(os.path.join(outputs_dir, 'samples'), exist_ok=True)

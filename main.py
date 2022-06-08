@@ -20,7 +20,7 @@ from pipeline.plotting import make_genome_plots
 from pipeline.trans_dist_plot import make_trans_dist_plot
 from pipeline.plasmid_plot import plot_plasmid
 
-from parameters import working_dir, Qscore_threshold, info_file, delete_intermediates
+from parameters import read_files_dir, Qscore_threshold, info_file, delete_intermediates
 
 def get_samples_to_process(isCloud):
 	if not isCloud:
@@ -50,10 +50,10 @@ def get_samples_to_process(isCloud):
 			key = item['Key']
 			filename = key.split('/')[-1]
 			s3.download_file('sternberg-sequencing-data', key, f'./tmp/raw/{filename}')
-		if info['Genome']:
-			s3.download_file('sternberg-sequencing-data', f"bioinformatic_resources/genomes/{info['Genome']}", f"./tmp/{info['Genome']}")
-		if info['Plasmid']:
-			s3.download_file('sternberg-sequencing-data', f"bioinformatic_resources/plasmids/{info['Plasmid']}", f"./tmp/{info['Plasmid']}")
+		if info['Target fasta file']:
+			s3.download_file('sternberg-sequencing-data', f"bioinformatic_resources/genomes/{info['Target fasta file']}", f"./tmp/{info['Target fasta file']}")
+		if info['Second target fasta file']:
+			s3.download_file('sternberg-sequencing-data', f"bioinformatic_resources/plasmids/{info['Second target fasta file']}", f"./tmp/{info['Second target fasta file']}")
 
 	return [info]
 
@@ -66,10 +66,11 @@ def main(isCloud=False):
 		setup_paths(sample, isCloud)
 		meta_info = sample_info if isCloud else get_info_for_sample(sample)
 		original_input = copy.deepcopy(meta_info)
+		
 		if isCloud:
-			meta_info['Genome'] = os.path.join(Path(__file__).parent.absolute(), 'tmp', meta_info['Genome'])
-			if meta_info['Plasmid']:
-				meta_info['Plasmid'] = os.path.join(Path(__file__).parent.absolute(), 'tmp', meta_info['Plasmid'])
+			meta_info['Target fasta file'] = os.path.join(Path(__file__).parent.absolute(), 'tmp', meta_info['Target fasta file'])
+			if meta_info['Second target fasta file']:
+				meta_info['Second target fasta file'] = os.path.join(Path(__file__).parent.absolute(), 'tmp', meta_info['Second target fasta file'])
 
 		print('----------')
 		print('----------')
@@ -82,13 +83,13 @@ def main(isCloud=False):
 
 		
 		# Start at the end to avoid repeating steps with saved results
-		histogram_path = output_path(os.path.join('samples', "{}_genome_read_locations.csv".format(sample)))
-		plasmid_histogram_path = output_path(os.path.join('samples', "{}_plasmid_read_locations.csv".format(sample)))
+		histogram_path = output_path(os.path.join('samples', "{}_target_read_locations.csv".format(sample)))
+		second_histogram_path = output_path(os.path.join('samples', "{}_second_target_read_locations.csv".format(sample)))
 		
 		filtered_path = inter_path('{}_FILTERED.fastq'.format(sample))
 		fp_path = inter_path("{}_FINGERPRINTED.fasta".format(sample))
 		# step 1: process raw files, concatenate
-		raw_files_dir = os.path.join(Path(working_dir), 'raw') if not isCloud else './tmp/raw'
+		raw_files_dir = Path(read_files_dir) if not isCloud else './tmp/raw'
 		filtered_path = inter_path('{}_FILTERED.fastq'.format(sample))
 		files = list(itertools.chain(Path(raw_files_dir).glob(f"{sample}*.fastq"), Path(raw_files_dir).glob(f"{sample}*/*.fastq")))
 		filenames = [path.resolve() for path in files]
@@ -111,8 +112,8 @@ def main(isCloud=False):
 
 		run_information = make_genome_plots(histogram_path, meta_info)
 
-		if len(meta_info['Plasmid']) > 1:
-			run_information = plot_plasmid(plasmid_histogram_path, meta_info)
+		if len(meta_info['Second target fasta file']) > 1:
+			run_information = plot_plasmid(second_histogram_path, meta_info)
 		
 		make_trans_dist_plot(histogram_path, run_information)
 		

@@ -80,8 +80,7 @@ def plot_binned(filepath, run_information, yAxis_type, isPlasmid=False):
     # 2. "normalized" - by percentage of total reads
     # 3. "zoomed" - a normalized graph that is zoomed in at the y-axis to show low-frequence bins
     code = run_information['Sample']
-    desc = run_information['Information for graphs']
-    psl = run_information['pCascade #']
+    description = run_information['Description']
     exp_date = run_information['Experiment date']
     spacer_locations = [int(loc) for loc in run_information['End of protospacer'].split()]
 
@@ -137,8 +136,8 @@ def plot_binned(filepath, run_information, yAxis_type, isPlasmid=False):
     if yAxis_type == 'zoomed':
         text_x = 33 * bin_scale
         text_y = 0.8 * max_y
-    plt.text(text_x, text_y, "{}-{}\n{}\ngRNA Plasmid = {}\nTotal Reads = {}"
-        .format(code, exp_date, desc, psl, total_reads))
+    plt.text(text_x, text_y, "{}-{}\n{}\nTotal Reads = {}"
+        .format(code, exp_date, description, total_reads))
 
     # save figure
     sample = run_information['Sample']

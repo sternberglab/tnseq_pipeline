@@ -9,7 +9,7 @@ import zipfile
 from pathlib import Path
 
 from .utils import inter_path
-from parameters import Qscore_threshold, delete_intermediates, working_dir
+from parameters import Qscore_threshold, delete_intermediates, read_files_dir
 
 total_records = 0
 def filtergen(files, threshold):  # generator function that returns edited reads that pass filter, to write new fastq file
@@ -64,7 +64,7 @@ def unzip_files(sample=None, isCloud=False):
     # unzips files for a given sample
     # Files should be in the 'raw' directory, either in a folder starting
     # with the sample id, or a filename starting with the sample id
-    raw_files_dir = os.path.join(Path(working_dir), 'raw')
+    raw_files_dir = Path(read_files_dir)
     if isCloud:
         raw_files_dir = os.path.join(Path(__file__).parent.parent.absolute(), 'tmp', 'raw')
     raw_path = Path(raw_files_dir)

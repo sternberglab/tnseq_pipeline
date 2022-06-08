@@ -1,50 +1,68 @@
 # General settings
 
-# This will delete intermediate files
-# to free up disk space. Turn it off if you want to debug things
-# or see all fingerprints, all reads, etc
-delete_intermediates = False
+#### REQUIRED ####
 
-# Path to an info csv file with various information, see the example file for details
+'''
+Path to the csv file with information about the samples to run.
+See an example in './inputs/experiment_info.csv', and descriptions
+of columns are in the README. 
+Paths can be either relative or absolute, but cannot contain spaces. 
+'''
 info_file = "./inputs/experiment_info.csv"
 
+'''
+Path to a folder containing the read files. Can be relative or absolute. 
+Read files can be either zipped (.fastq.gz) or unzipped (.fastq)
+Either the containing folder or the filename must begin with
+the sample identifier. 
+Ex. When processing sample 'A234', the pipeline will find the following: 
+- 'read_files_dir/A234_L001-ds.aaa/other_filename.fastq.gz'
+- 'read_files_dir/A234_L001_R1_001.fastq'
+- 'read_files_dir/other_foldername/A234_L001_R1_001.fastq.gz'
+'''
+read_files_dir = '../working/raw'
 
-# 1. FOR LOADING NEW DATA
 
-# The directory where your raw Illumina files are held, 
-# Illumina files should be placed in a /raw subfolder
-# and can be zip files or unzipped
-# This can be either relative or absolute path, but the absolute path it goes to cannot have spaces!
-# ex. C:\Chris A\files will not work, because a space is in the path
-# Intermediate files will also be generated into this folder (and then deleted, if above setting is True)
-working_dir = "../original_pipeline_example"
+#### DEBUGGING SETTINGS ####
 
-# The Qscore_threshold to use
-# This must be defined (use -1 if do not want to filter)
+'''
+Intermediate files are created at different steps of processing. 
+Setting this to false will keep these files for debugging or looking
+deeper at some filtered reads. 
+Normally, these files are deleted to save space. 
+'''
+delete_intermediates = False
+
+
+#### SENSITIVITY AND SYSTEM SETTINGS ####
+
+'''
+The Qscore_threshold to use. This must be defined. 
+Use -1 to not filter any reads. 
+Reads with <50% bases passing threshold are filtered. 
+'''
 Qscore_threshold = 20
 
-
-# 2. FOR FINGERPRINTING
 # The length of the fingerprint to match
 fingerprint_length = 17
 
-
-# 3. FOR MAPPING
 # The number of bases duplicated by transposon insertion
 transposon_site_duplication_length = 5
 
-# 4. GRAPHS
-# For all graphs, use the following filetype and dpi
+
+#### GRAPHING SETTINGS ####
+
+# General matplotlib settings
 plots_filetype = 'svg'
 plots_dpi = 600
 fig_size_inches = [8.9, 3.1]
 
-# Bin size for genome-wide plots in base pairs
+# Bin size for genome-wide plots, in base pairs
 genome_bin_size = 5000
 
 # Percent of reads at which to cap the y-axis on the zoomed in histogram
 # to show low-level reads
 low_reads_cap_percent = 0.50
 
-# Run parameters for transposition distance histogram
+# On-target calculated window in the transposition distance histogram
 on_target_window = 200

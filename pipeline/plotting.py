@@ -91,13 +91,12 @@ def plot_binned(filepath, run_information, yAxis_type, isPlasmid=False):
     # 2. "normalized" - by percentage of total reads
     # 3. "zoomed" - a normalized graph that is zoomed in at the y-axis to show low-frequence bins
     code = run_information.get('Sample', None)
-    desc = run_information.get('Information for graphs', None)
-    psl = run_information.get('pCascade #', None)
+    description = run_information.get('Description', None)
     exp_date = run_information.get('Experiment date', None)
     spacer_locations = [int(loc) for loc in run_information['End of protospacer'].split()]
-    genome_path = run_information['Genome']
+    genome_path = run_information['Target fasta file']
     if isPlasmid:
-        genome_path = run_information['Plasmid']
+        genome_path = run_information['Second target fasta file']
     genome_length = len(SeqIO.read(Path(genome_path), 'fasta'))
     bin_scale = int(100000/genome_bin_size)
     bin_size = genome_bin_size
@@ -153,8 +152,8 @@ def plot_binned(filepath, run_information, yAxis_type, isPlasmid=False):
     if yAxis_type == 'zoomed':
         text_x = 33 * bin_scale
         text_y = 0.8 * max_y
-    plt.text(text_x, text_y, "{}-{}\n{}\ngRNA Plasmid = {}\nTotal Reads = {}"
-        .format(code, exp_date, desc, psl, total_reads))
+    plt.text(text_x, text_y, "{}-{}\n{}\nTotal Reads = {}"
+        .format(code, exp_date, description, total_reads))
 
     # save figure
     sample = run_information['Sample']

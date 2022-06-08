@@ -1,7 +1,6 @@
 import os
 import fnmatch
 from Bio import SeqIO
-import xlsxwriter
 from pathlib import Path
 import datetime as dt
 import csv
@@ -23,15 +22,14 @@ def make_trans_dist_plot(readsCsv, run_information):
 
     # map spacer to refseq and determine query window
     code = run_information.get('Sample')
-    genome_path = run_information.get('Genome')
-    genome_length = len(SeqIO.read(Path(genome_path), 'fasta'))
-    desc = run_information.get('Information for graphs', None)
+    target_path = run_information.get('Target fasta file')
+    target_length = len(SeqIO.read(Path(target_path), 'fasta'))
     psl = run_information.get('pCascade #', None)
     description = run_information.get('Description', None)
     spacer = run_information.get('Spacer').upper()
     exp_date = run_information.get('Experiment date', None)
 
-    genome = SeqIO.read(Path(genome_path), "fasta")
+    genome = SeqIO.read(Path(target_path), "fasta")
     refseq = genome.seq.upper()
     is_reverse = False
     if refseq.find(spacer) >= 0:
