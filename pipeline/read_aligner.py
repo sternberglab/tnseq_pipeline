@@ -74,7 +74,7 @@ def run_alignment(fingerprinted_path, meta_info):
     target_reads = inter_path(f"{meta_info['Sample']}_target_bwt2_matches.sam")
     target_no_reads = inter_path(f"{meta_info['Sample']}_target_bwt2_no_matches.sam")
     hist_results = ''
-    if len(target_file):
+    if len(target_file) > 1:
         find_alignments(fingerprinted_path, target_file_path, f"{meta_info['Sample']}_target")
         hist_results = correct_output_reads(target_reads, target_no_reads, meta_info, f"{meta_info['Sample']}_target")
     else:
@@ -86,7 +86,7 @@ def run_alignment(fingerprinted_path, meta_info):
     target_no_reads_fasta = inter_path("{}.fasta".format(Path(target_no_reads).stem))
     sam_to_fasta(target_no_reads, target_no_reads_fasta)
 
-    if len(second_target_file):
+    if len(second_target_file) > 1:
         second_target_reads = inter_path("second_target_bwt2_matches.sam").format(meta_info['Sample'])
         second_target_no_reads = inter_path("second_target_bwt2_no_matches.sam").format(meta_info['Sample'])
         if second_target_file_path.exists():

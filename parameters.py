@@ -31,7 +31,7 @@ Setting this to false will keep these files for debugging or looking
 deeper at some filtered reads. 
 Normally, these files are deleted to save space. 
 '''
-delete_intermediates = False
+delete_intermediates = True
 
 
 #### SENSITIVITY AND SYSTEM SETTINGS ####
