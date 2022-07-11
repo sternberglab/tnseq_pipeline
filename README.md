@@ -46,6 +46,6 @@ Run parameters with information on each sample are provided in a `.csv` file. An
 
 The outputs are put in a created `outputs` folder. The `output_log.csv` contains information about each sample run, including read counts at each filtering step, for matches to donor, spike-ins, etc.
 
-In the `outputs/samples` directory, each sample has a CSV with the locations and orientations of all mapped reads. If plasmid file was provided, another CSV is generated with mappings to the plasmid. 
+In the `outputs/samples` directory, each sample has a CSV with the locations and orientations of all mapped reads. If a second target file file was provided, another CSV is generated with mappings to the second target. 
 
 A series of plots are generated for each sample in the `outputs/plots` directory, variations of genome-wide mappings with reads bucketed together, and zoomed in plots around the target region. 

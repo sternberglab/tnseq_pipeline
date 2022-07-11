@@ -16,11 +16,11 @@ def fpgen(input_reads, meta_info):  # generator function that returns
     if read_type not in ["fragment", "restriction"]:
         raise "Read type must be 'fragment' or 'restriction'"
 
-    tn_end_sequence = meta_info["tn_end_sequence"].upper()
+    flank_sequence = meta_info["flank_sequence"].upper()
 
-    tn_end_length = len(tn_end_sequence)
+    tn_end_length = len(flank_sequence)
     for record in SeqIO.parse(input_reads, "fastq"):
-        found = record.seq.find(tn_end_sequence)
+        found = record.seq.find(flank_sequence)
         if found > -1:
             if read_type == 'restriction':
                 if found < 21 and found >= fingerprint_length:
@@ -31,9 +31,9 @@ def fpgen(input_reads, meta_info):  # generator function that returns
             else:
                 # fragment reads are always coming from the inside (regardless of R or L tn_end)
                 # so the fingerprint comes AFTER the tn_end
-                if len(record) - (found + len(tn_end_sequence)) >= fingerprint_length:
-                    start = found + len(tn_end_sequence)
-                    end = found + len(tn_end_sequence) + fingerprint_length
+                if len(record) - (found + len(flank_sequence)) >= fingerprint_length:
+                    start = found + len(flank_sequence)
+                    end = found + len(flank_sequence) + fingerprint_length
                     fingerprint = record.seq[start:end]
                     newrec = SeqRecord(fingerprint, id=record.id, name=record.name)
                     yield newrec
@@ -43,7 +43,7 @@ def fpgen(input_reads, meta_info):  # generator function that returns
             i = 0
             while 0 <= i <= (len(record.seq) - tn_end_length):
                 query = record.seq[i:i+tn_end_length]
-                if hamming_dist(query, tn_end_sequence) < 2:
+                if hamming_dist(query, flank_sequence) < 2:
                     if i >= fingerprint_length and i < 21:
                         fingerprint = record.seq[i - fingerprint_length:i]
                         newrec = SeqRecord(fingerprint, id=record.id, name=record.name)
