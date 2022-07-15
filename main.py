@@ -3,8 +3,7 @@ import os
 import copy
 import csv
 import json
-import fnmatch
-import gzip
+import datetime
 import shutil
 from Bio import SeqIO
 import itertools
@@ -12,7 +11,6 @@ import botocore
 import boto3
 
 from pipeline.utils import inter_path, update_log, output_path, setup_paths, get_info_for_sample
-
 from pipeline.read_raw_files import process_files, unzip_files
 from pipeline.fingerprinting import fingerprinting
 from pipeline.read_aligner import run_alignment
@@ -96,10 +94,7 @@ def main(isCloud=False):
 		}
 
 		
-		# Start at the end to avoid repeating steps with saved results
-		histogram_path = output_path(os.path.join('samples', "{}_target_read_locations.csv".format(sample)))
-		second_histogram_path = output_path(os.path.join('samples', "{}_second_target_read_locations.csv".format(sample)))
-		
+
 		filtered_path = inter_path('{}_FILTERED.fastq'.format(sample))
 		fp_path = inter_path("{}_FINGERPRINTED.fasta".format(sample))
 		# step 1: process raw files, concatenate
@@ -124,6 +119,8 @@ def main(isCloud=False):
 
 		update_log(log_info)
 
+		histogram_path = output_path(os.path.join('samples', f"{meta_info['output_date']}_{sample}_target_read_locations.csv"))
+		second_histogram_path = output_path(os.path.join('samples', f"{meta_info['output_date']}_{sample}_second_target_read_locations.csv"))
 		run_information = make_genome_plots(histogram_path, meta_info)
 
 		if len(meta_info['Second target fasta file']) > 1:
@@ -138,9 +135,11 @@ def main(isCloud=False):
 			for file in files:
 				if Path(f'{file}.gz').exists():
 					os.remove(file)
+	
 	create_igv_outputs()
 	if delete_intermediates:
-		shutil.rmtree(Path(inter_path('')).absolute())
+		intermediates_dir = os.path.join(Path(__file__).parent.absolute(), 'intermediates')
+		shutil.rmtree(intermediates_dir)
 		
 	return log_info
 

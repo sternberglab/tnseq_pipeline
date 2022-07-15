@@ -109,6 +109,8 @@ def process_bed_to_bigwig(sample_id, bed_path,  output_info, chromosome):
 		sizes_file.write(f"{chromosome.id}\t{len(chromosome.seq)}")
 	
 	# Run bedGraphToBigWig on each
+	outputs_igv_dir = os.path.join(directory, 'outputs', 'igv', sample_id)
+	os.makedirs(outputs_igv_dir, exist_ok=True)
 	for ct_type in ['total', 'RL', 'LR']:
 		input_filepath = os.path.join(sample_dir, f"2_parsed_{sample_id}_{ct_type}.bedgraph")
 		
@@ -117,8 +119,7 @@ def process_bed_to_bigwig(sample_id, bed_path,  output_info, chromosome):
 		date_prefix = output_info['Experiment date']
 		if not date_prefix:
 			date_prefix = output_info["Run date"]
-		output_filepath = os.path.join(directory, 'outputs', 'igv', sample_id, f'{date_prefix}_{sample_id}_{ct_type}.bw')
-		os.makedirs(output_filepath, exist_ok=True)
+		output_filepath = os.path.join(outputs_igv_dir, f'{date_prefix}_{sample_id}_{ct_type}.bw')
 		to_bigwig_cmd = f"bedGraphToBigWig {input_filepath} {chrom_sizes_path} {output_filepath}"
 		subprocess.run(to_bigwig_cmd, shell=True)
 

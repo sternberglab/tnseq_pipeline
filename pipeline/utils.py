@@ -33,7 +33,7 @@ def output_path(filename):
 
 log_fieldnames = [
 	'Sample', 
-	'Experiment Date',
+	'Experiment date',
 	'Run date',
 	'Qscore Threshold',
 	'Total Raw Reads',
