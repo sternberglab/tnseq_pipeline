@@ -3,8 +3,7 @@ import os
 import copy
 import csv
 import json
-import fnmatch
-import gzip
+import datetime
 import shutil
 from Bio import SeqIO
 import itertools
@@ -12,13 +11,13 @@ import botocore
 import boto3
 
 from pipeline.utils import inter_path, update_log, output_path, setup_paths, get_info_for_sample
-
 from pipeline.read_raw_files import process_files, unzip_files
 from pipeline.fingerprinting import fingerprinting
 from pipeline.read_aligner import run_alignment
 from pipeline.plotting import make_genome_plots
 from pipeline.trans_dist_plot import make_trans_dist_plot
 from pipeline.plasmid_plot import plot_plasmid
+from pipeline.output_igv import create_igv_outputs
 
 from parameters import read_files_dir, Qscore_threshold, info_file, delete_intermediates
 
@@ -58,13 +57,20 @@ def get_samples_to_process(isCloud):
 	return [info]
 
 def main(isCloud=False):
+	today_string = datetime.datetime.now().strftime('%Y%m%d')
 	samples_to_process = get_samples_to_process(isCloud)
 	for sample_info in samples_to_process:
 		sample = sample_info['Sample']
+		experiment_date_string = None
+		try:
+			experiment_date_string = sample_info.get("Experiment date").strptime('%Y%m%d').strftime('%Y%m%d')
+		except:
+			pass
 		# unzip files for the sample (deletes the zips if "delete_intermediates" is true)
 		unzip_files(sample, isCloud)
 		setup_paths(sample, isCloud)
 		meta_info = sample_info if isCloud else get_info_for_sample(sample)
+		meta_info['output_date'] = experiment_date_string if experiment_date_string else today_string
 		original_input = copy.deepcopy(meta_info)
 		
 		if isCloud:
@@ -79,13 +85,16 @@ def main(isCloud=False):
 		print('----------')
 
 
-		log_info = {'Sample': sample, 'Qscore Threshold': str(Qscore_threshold), 'Input Parameters': original_input}
+		log_info = {
+			'Sample': sample,
+			'Qscore Threshold': str(Qscore_threshold),
+			'Input Parameters': original_input,
+			'Run date': today_string,
+			'Experiment date': experiment_date_string
+		}
 
 		
-		# Start at the end to avoid repeating steps with saved results
-		histogram_path = output_path(os.path.join('samples', "{}_target_read_locations.csv".format(sample)))
-		second_histogram_path = output_path(os.path.join('samples', "{}_second_target_read_locations.csv".format(sample)))
-		
+
 		filtered_path = inter_path('{}_FILTERED.fastq'.format(sample))
 		fp_path = inter_path("{}_FINGERPRINTED.fasta".format(sample))
 		# step 1: process raw files, concatenate
@@ -110,6 +119,8 @@ def main(isCloud=False):
 
 		update_log(log_info)
 
+		histogram_path = output_path(os.path.join('samples', f"{meta_info['output_date']}_{sample}_target_read_locations.csv"))
+		second_histogram_path = output_path(os.path.join('samples', f"{meta_info['output_date']}_{sample}_second_target_read_locations.csv"))
 		run_information = make_genome_plots(histogram_path, meta_info)
 
 		if len(meta_info['Second target fasta file']) > 1:
@@ -124,7 +135,11 @@ def main(isCloud=False):
 			for file in files:
 				if Path(f'{file}.gz').exists():
 					os.remove(file)
-
+	
+	create_igv_outputs()
+	if delete_intermediates:
+		intermediates_dir = os.path.join(Path(__file__).parent.absolute(), 'intermediates')
+		shutil.rmtree(intermediates_dir)
 		
 	return log_info
 

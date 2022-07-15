@@ -221,7 +221,7 @@ def correct_reads(matches_sam, output_name, meta_info):
     combine["RL"] = combine["RL"].fillna(0)
     combine["LR"] = combine["LR"].fillna(0)
     
-    hist_path = output_path(os.path.join('samples', "{}_read_locations.csv".format(output_name)))
+    hist_path = output_path(os.path.join('samples', f"{meta_info['output_date']}_{output_name}_read_locations.csv"))
     combine.to_csv(hist_path)
     return [histogram, unique_reads, non_unique_reads]
 
