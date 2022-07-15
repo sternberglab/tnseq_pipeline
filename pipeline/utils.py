@@ -24,25 +24,29 @@ def setup_paths(code, isCloud):
 	os.makedirs(outputs_dir, exist_ok=True)
 
 def inter_path(filename):
-	return os.path.join(intermediates_dir, filename)
+	if filename:
+		return os.path.join(intermediates_dir, filename)
+	return intermediates_dir
 
 def output_path(filename):
 	return os.path.join(outputs_dir, filename)
 
 log_fieldnames = [
 	'Sample', 
+	'Experiment Date',
+	'Run date',
 	'Qscore Threshold',
 	'Total Raw Reads',
 	'Filtered Reads',
 	'Valid Fingerprint Reads',
-	'Unique Genome-Mapping Reads',
-	'Total Genome-Mapping Reads',
+	'Unique Target Mapping Reads',
+	'Total Target Mapping Reads',
 	'Undigested Donor Reads', 
 	'Spike-in Reads',
 	'CRISPR Array Self-Targeting Reads',
 	'Analysis Date',
-	'Unique Plasmid-Mapping Reads',
-	'Total Plasmid-Mapping Reads'
+	'Unique Second Target Mapping Reads',
+	'Total Second Target Mapping Reads'
 ]
 
 def update_log(data):
