@@ -63,7 +63,7 @@ def main(isCloud=False):
 		sample = sample_info['Sample']
 		experiment_date_string = None
 		try:
-			experiment_date_string = sample_info.get("Experiment date").strptime('%Y%m%d').strftime('%Y%m%d')
+			experiment_date_string = datetime.datetime.strptime(sample_info.get("Experiment date"), '%Y%m%d').strftime('%Y%m%d')
 		except:
 			pass
 		# unzip files for the sample (deletes the zips if "delete_intermediates" is true)
