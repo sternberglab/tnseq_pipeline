@@ -38,7 +38,7 @@ log_fieldnames = [
 	'Qscore Threshold',
 	'Total Raw Reads',
 	'Filtered Reads',
-	'Valid Fingerprint Reads',
+	'Valid Flank Reads',
 	'Unique Target Mapping Reads',
 	'Total Target Mapping Reads',
 	'Undigested Donor Reads', 

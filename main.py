@@ -12,7 +12,7 @@ import boto3
 
 from pipeline.utils import inter_path, update_log, output_path, setup_paths, get_info_for_sample
 from pipeline.read_raw_files import process_files, unzip_files
-from pipeline.fingerprinting import fingerprinting
+from pipeline.flank_finder import find_flanking_sequences
 from pipeline.read_aligner import run_alignment
 from pipeline.plotting import make_genome_plots
 from pipeline.trans_dist_plot import make_trans_dist_plot
@@ -94,9 +94,6 @@ def main(isCloud=False):
 		}
 
 		
-
-		filtered_path = inter_path('{}_FILTERED.fastq'.format(sample))
-		fp_path = inter_path("{}_FINGERPRINTED.fasta".format(sample))
 		# step 1: process raw files, concatenate
 		raw_files_dir = Path(read_files_dir) if not isCloud else './tmp/raw'
 		filtered_path = inter_path('{}_FILTERED.fastq'.format(sample))
@@ -108,13 +105,13 @@ def main(isCloud=False):
 		process_results = process_files(sample, filenames, filtered_path, meta_info)
 		log_info.update(process_results)
 		
-		# step 2: fingerprint the reads
-		fp_path = inter_path("{}_FINGERPRINTED.fasta".format(sample))
-		fp_results = fingerprinting(filtered_path, fp_path, meta_info)
+		# step 2: Find the transposon end flanking sequences
+		flanks_path = inter_path("{}_FLANKS.fasta".format(sample))
+		fp_results = find_flanking_sequences(filtered_path, flanks_path, meta_info)
 		log_info.update(fp_results)
 
 		# step 3: align the reads in the genome
-		alignment_results = run_alignment(fp_path, meta_info)
+		alignment_results = run_alignment(flanks_path, meta_info)
 		log_info.update(alignment_results)
 
 		update_log(log_info)

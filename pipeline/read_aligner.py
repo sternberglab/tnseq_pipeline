@@ -14,7 +14,7 @@ import platform
 import time
 
 from .utils import inter_path, output_path
-from parameters import fingerprint_length as map_length, transposon_site_duplication_length as TSD
+from parameters import transposon_end_flanking_sequence_length as map_length, target_site_duplication_length as TSD
 
 def find_alignments(read_sequences_fasta, target_fasta, output_filename):
     print("Find alignments for {}".format(output_filename))
@@ -62,7 +62,7 @@ def sam_to_fasta(sam_path, fasta_path):
                 output_fasta.write('>{}\n{}\n'.format(row[0], row[9]))
     return
 
-def run_alignment(fingerprinted_path, meta_info):
+def run_alignment(flanks_path, meta_info):
     print("Running alignment mapping...")
     start = time.perf_counter()
 
@@ -75,7 +75,7 @@ def run_alignment(fingerprinted_path, meta_info):
     target_no_reads = inter_path(f"{meta_info['Sample']}_target_bwt2_no_matches.sam")
     hist_results = ''
     if len(target_file) > 1:
-        find_alignments(fingerprinted_path, target_file_path, f"{meta_info['Sample']}_target")
+        find_alignments(flanks_path, target_file_path, f"{meta_info['Sample']}_target")
         hist_results = correct_output_reads(target_reads, target_no_reads, meta_info, f"{meta_info['Sample']}_target")
     else:
         print("No target fasta provided in the info csv, skipping genome alignment")
@@ -243,7 +243,7 @@ def correct_output_reads(matches_sam, no_matches_sam, meta_info, output_name):
     with open(fasta_path, 'w', newline='') as file:
         file.write(fasta_file)
 
-    ## Check the fingerprints without genome matches against donor, spike and CRISPR Sequence
+    ## Check the flanking sequences without genome matches against donor, spike and CRISPR Sequence
     ##
     ## We check the sequences with no genome matches against these donor and spike first. 
     ## If it doesn't match either of them, we additionally check a
