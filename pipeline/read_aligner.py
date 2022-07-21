@@ -87,8 +87,8 @@ def run_alignment(fingerprinted_path, meta_info):
     sam_to_fasta(target_no_reads, target_no_reads_fasta)
 
     if len(second_target_file) > 1:
-        second_target_reads = inter_path("second_target_bwt2_matches.sam").format(meta_info['Sample'])
-        second_target_no_reads = inter_path("second_target_bwt2_no_matches.sam").format(meta_info['Sample'])
+        second_target_reads = inter_path(f"{meta_info['Sample']}_second_target_bwt2_matches.sam")
+        second_target_no_reads = inter_path(f"{meta_info['Sample']}_second_target_bwt2_no_matches.sam")
         if second_target_file_path.exists():
             find_alignments(target_no_reads_fasta, second_target_file_path, f"{meta_info['Sample']}_second_target")
             correct_output_reads(second_target_reads, second_target_no_reads, meta_info, f"{meta_info['Sample']}_second_target")

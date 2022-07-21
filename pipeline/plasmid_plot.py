@@ -79,12 +79,12 @@ def plot_binned(filepath, run_information, yAxis_type, isPlasmid=False):
     # 1. "raw" - the raw counts of reads in each bin
     # 2. "normalized" - by percentage of total reads
     # 3. "zoomed" - a normalized graph that is zoomed in at the y-axis to show low-frequence bins
-    code = run_information['Sample']
-    description = run_information['Description']
-    exp_date = run_information['Experiment date']
+    code = run_information.get('Sample', None)
+    description = run_information.get('Description', None)
+    exp_date = run_information.get('Experiment date', None)
     spacer_locations = [int(loc) for loc in run_information['End of protospacer'].split()]
-
-    genome_path = run_information['Plasmid']
+    
+    genome_path = run_information['Second target fasta file']
     genome_length = len(SeqIO.read(Path(genome_path), 'fasta'))
         
     bin_scale = int(genome_length // 500)
@@ -141,13 +141,13 @@ def plot_binned(filepath, run_information, yAxis_type, isPlasmid=False):
 
     # save figure
     sample = run_information['Sample']
-    graph_name = "plasmid"
-    plot_path = output_path(os.path.join('plots', '{}_{}_hist_{}.{}'.format(sample, graph_name, yAxis_type, plots_filetype)))
+    graph_name = "second_target"
+    plot_path = output_path(os.path.join('plots', f'{sample}_{graph_name}_hist_{yAxis_type}.{plots_filetype}'))
     plt.savefig(plot_path, dpi=plots_dpi)
     plt.close()  # closes the matplotlib preview popup window
 
 def plot_section(csvFile, meta_info, spacerSeq, name):
-    genome_path = meta_info['Plasmid']
+    genome_path = meta_info['Second target fasta file']
     genome = SeqIO.read(Path(genome_path), 'fasta')
 
     spacerEnd = genome.seq.upper().find(spacerSeq) + len(spacerSeq)
@@ -188,7 +188,7 @@ def plot_section(csvFile, meta_info, spacerSeq, name):
     axs.yaxis.set_label_coords(-0.05, 0.4)
 
     fig.set_size_inches(5, 4.2)
-    plot_path = output_path(os.path.join('plots', '{}_plasmid_dist_{}.{}'.format(meta_info['Sample'], name, plots_filetype)))
+    plot_path = output_path(os.path.join('plots', f'{meta_info["Sample"]}_second_target_dist_{name}.{plots_filetype}'))
     plt.savefig(plot_path, dpi=plots_dpi)
     plt.close()
 
@@ -199,12 +199,14 @@ def plot_plasmid(csvFile, meta_info):
     start = time.perf_counter()
     print("Making plasmid mapping histograms...")
 
-    print("Got the meta information about this run, creating the genome-mapping histograms...")
+    print("Got the meta information about this run, creating the plasmid-mapping histograms...")
     plot_binned(csvFile, meta_info, 'raw')
     plot_binned(csvFile, meta_info, 'normalized')
     # plot sections for the crispr array region and donor region
-    plot_section(csvFile, meta_info, CRISPR_array_spacer, "CRISPR_seq")
-    plot_section(csvFile, meta_info, donor_spacer, "donor")
+    if CRISPR_array_spacer:
+        plot_section(csvFile, meta_info, CRISPR_array_spacer, "CRISPR_seq")
+    if donor_spacer:
+        plot_section(csvFile, meta_info, donor_spacer, "donor")
     elapsed_time = round(time.perf_counter() - start, 2)
     print("Finished plasmid mapping plotting in {} seconds".format(elapsed_time))
     return meta_info
