@@ -14,7 +14,7 @@ import platform
 import time
 
 from .utils import inter_path, output_path
-from parameters import fingerprint_length as map_length, transposon_site_duplication_length as TSD
+from parameters import transposon_end_flanking_sequence_length as map_length, target_site_duplication_length as TSD
 
 def find_alignments(read_sequences_fasta, target_fasta, output_filename):
     print("Find alignments for {}".format(output_filename))
@@ -62,7 +62,7 @@ def sam_to_fasta(sam_path, fasta_path):
                 output_fasta.write('>{}\n{}\n'.format(row[0], row[9]))
     return
 
-def run_alignment(fingerprinted_path, meta_info):
+def run_alignment(flanks_path, meta_info):
     print("Running alignment mapping...")
     start = time.perf_counter()
 
@@ -75,7 +75,7 @@ def run_alignment(fingerprinted_path, meta_info):
     target_no_reads = inter_path(f"{meta_info['Sample']}_target_bwt2_no_matches.sam")
     hist_results = ''
     if len(target_file) > 1:
-        find_alignments(fingerprinted_path, target_file_path, f"{meta_info['Sample']}_target")
+        find_alignments(flanks_path, target_file_path, f"{meta_info['Sample']}_target")
         hist_results = correct_output_reads(target_reads, target_no_reads, meta_info, f"{meta_info['Sample']}_target")
     else:
         print("No target fasta provided in the info csv, skipping genome alignment")
@@ -91,12 +91,13 @@ def run_alignment(fingerprinted_path, meta_info):
         second_target_no_reads = inter_path(f"{meta_info['Sample']}_second_target_bwt2_no_matches.sam")
         if second_target_file_path.exists():
             find_alignments(target_no_reads_fasta, second_target_file_path, f"{meta_info['Sample']}_second_target")
-            correct_output_reads(second_target_reads, second_target_no_reads, meta_info, f"{meta_info['Sample']}_second_target")
+            second_results = correct_output_reads(second_target_reads, second_target_no_reads, meta_info, f"{meta_info['Sample']}_second_target")
+            hist_results.update(second_results)
         else:
             print("No second target fasta provided in the csv, skipping second target alignment")
     
         elapsed_time = round(time.perf_counter() - start, 2)
-        print("Second target histogram data exists ({} seconds)".format(elapsed_time))
+        print("Second target histogram data created ({} seconds)".format(elapsed_time))
 
     return hist_results
 
@@ -243,7 +244,7 @@ def correct_output_reads(matches_sam, no_matches_sam, meta_info, output_name):
     with open(fasta_path, 'w', newline='') as file:
         file.write(fasta_file)
 
-    ## Check the fingerprints without genome matches against donor, spike and CRISPR Sequence
+    ## Check the flanking sequences without genome matches against donor, spike and CRISPR Sequence
     ##
     ## We check the sequences with no genome matches against these donor and spike first. 
     ## If it doesn't match either of them, we additionally check a
@@ -276,11 +277,11 @@ def correct_output_reads(matches_sam, no_matches_sam, meta_info, output_name):
         output = {
             'Unique Target Mapping Reads': unique_reads_seq_count,
             'Total Target Mapping Reads': non_unique_reads_seq_count + unique_reads_seq_count,
-            'Undigested Donor Reads': donor_matches,
+            'Contaminating donor reads': donor_matches,
             'Spike-in Reads': spike_matches,
             'CRISPR Array Self-Targeting Reads': cripsr_seq_matches
         }
-    elif 'second' in output_name:
+    else:
         output = {
             'Unique Second Target Mapping Reads': unique_reads_seq_count,
             'Total Second Target Mapping Reads': non_unique_reads_seq_count + unique_reads_seq_count

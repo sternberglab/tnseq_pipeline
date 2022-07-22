@@ -34,12 +34,11 @@ def get_input_info():
 			all_inputs_info = [row for row in reader]
 	return {s["Sample"]: s for s in all_inputs_info}
 
-def get_output_info():
+def get_output_info(output_path):
 	# Get the samples output information
 	samples_outputs = None
-	output_path = Path(os.path.join(directory, 'outputs', 'output_log.csv'))
-	if not output_path.exists():
-		raise Exception("Could not find the output_log.csv file. Was it moved or deleted?")
+	if not Path(output_path).exists():
+		raise Exception(f"Could not find {output_path} to create bigwig files")
 	with open(output_path, 'r', encoding='utf-8-sig') as opened_output_file:
 		reader = csv.DictReader(opened_output_file)
 		samples_outputs = {row["Sample"]: row for row in reader}
@@ -123,10 +122,10 @@ def process_bed_to_bigwig(sample_id, bed_path,  output_info, chromosome):
 		to_bigwig_cmd = f"bedGraphToBigWig {input_filepath} {chrom_sizes_path} {output_filepath}"
 		subprocess.run(to_bigwig_cmd, shell=True)
 
-def create_igv_outputs():
+def create_bw_outputs(output_path):
 	# Get sample info from the inputs and outputs
 	all_input_info = get_input_info()
-	all_output_info = get_output_info()
+	all_output_info = get_output_info(output_path)
 	
 	# For each sample, create a csv that can be converted to bed format
 	# and place in the "1_all_csv" folder

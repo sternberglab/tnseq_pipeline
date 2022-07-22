@@ -8,7 +8,7 @@ See an example in './inputs/experiment_info.csv', and descriptions
 of columns are in the README. 
 Paths can be either relative or absolute, but cannot contain spaces. 
 '''
-info_file = "./inputs/experiment_info.csv"
+info_file = "./Jerrin_tnseq2.csv"
 
 '''
 Path to a folder containing the read files. Can be relative or absolute. 
@@ -20,7 +20,7 @@ Ex. When processing sample 'A234', the pipeline will find the following:
 - 'read_files_dir/A234_L001_R1_001.fastq'
 - 'read_files_dir/other_foldername/A234_L001_R1_001.fastq.gz'
 '''
-read_files_dir = '../working/raw'
+read_files_dir = '../ngs_run_220711/'
 
 
 #### DEBUGGING SETTINGS ####
@@ -31,7 +31,7 @@ Setting this to false will keep these files for debugging or looking
 deeper at some filtered reads. 
 Normally, these files are deleted to save space. 
 '''
-delete_intermediates = True
+delete_intermediates = False
 
 
 #### SENSITIVITY AND SYSTEM SETTINGS ####
@@ -43,11 +43,11 @@ Reads with <50% bases passing threshold are filtered.
 '''
 Qscore_threshold = 20
 
-# The length of the fingerprint to match
-fingerprint_length = 17
+# The length of the sequence to match to the target files
+transposon_end_flanking_sequence_length = 17
 
 # The number of bases duplicated by transposon insertion
-transposon_site_duplication_length = 5
+target_site_duplication_length = 5
 
 
 #### GRAPHING SETTINGS ####

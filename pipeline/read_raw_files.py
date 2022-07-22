@@ -33,7 +33,7 @@ def process_files(code, input_filenames, filtered_path, meta_info):
 
     # find the read_end (R1 or R2) with the tn flank_seq and only look at it
     read_end = None
-    flank_seq = meta_info['flank_sequence'].upper()
+    flank_seq = meta_info['transposon_end_sequence'].upper()
     r1 = next((f for f in input_filenames if 'R1' in f.name), None)
     r1ct = 0
     if r1:

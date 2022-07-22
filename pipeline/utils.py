@@ -38,10 +38,10 @@ log_fieldnames = [
 	'Qscore Threshold',
 	'Total Raw Reads',
 	'Filtered Reads',
-	'Valid Fingerprint Reads',
+	'Transposon end-containing reads',
 	'Unique Target Mapping Reads',
 	'Total Target Mapping Reads',
-	'Undigested Donor Reads', 
+	'Contaminating donor reads', 
 	'Spike-in Reads',
 	'CRISPR Array Self-Targeting Reads',
 	'Analysis Date',
@@ -49,37 +49,39 @@ log_fieldnames = [
 	'Total Second Target Mapping Reads'
 ]
 
-def update_log(data):
-	if not data['Sample'] or not data['Qscore Threshold']:
-		print("Cannot make a log entry without a code and Qscore threshold")
-		return
+def update_log(all_log_data):
+	analysis_date = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
-	data['Analysis Date'] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-
-	log_path = os.path.join(outputs_dir, 'output_log.csv')
-	if not Path(log_path).exists():
-		with open(log_path, 'w') as csvfile:
-			writer = csv.DictWriter(csvfile, fieldnames=log_fieldnames, extrasaction='ignore')
-			writer.writeheader()
+	log_path = os.path.join(outputs_dir, f'{datetime.now().strftime("%Y%m%d-%H:%M")}_output_log.csv')
+	fieldnames = log_fieldnames + [
+		'% Transposon end-containing',
+		'% Unique target',
+		'% Unique second target',
+		'% Donor',
+		'% Spike-in',
+		'% CRISPR Array',
+		'% Other'
+	]
+	with open(log_path, 'w') as csvfile:
+		writer = csv.DictWriter(csvfile, fieldnames=fieldnames, extrasaction='ignore')
+		writer.writeheader()
+		for data in all_log_data:
+			data['Analysis Date'] = analysis_date
+			data['% Transposon end-containing'] = int(data['Transposon end-containing reads']) / int(data['Filtered Reads'])
+			data['% Unique target'] = int(data['Unique Target Mapping Reads']) / int(data['Filtered Reads'])
+			data['% Unique second target'] = int(data.get('Unique Second Target Mapping Reads', 0)) / int(data['Filtered Reads'])
+			data['% Donor'] = int(data['Contaminating donor reads']) / int(data['Filtered Reads'])
+			data['% Spike-in'] = int(data['Spike-in Reads']) / int(data['Filtered Reads'])
+			data['% CRISPR Array'] = int(data['CRISPR Array Self-Targeting Reads']) / int(data['Filtered Reads'])
+			data['% Other'] = 1 - sum([
+				data['% Unique target'], 
+				data['% Unique second target'],
+				data['% Donor'],
+				data['% Spike-in'],
+				data['% CRISPR Array']
+			])
 			writer.writerow(data)
-
-	else:
-		tempfile = NamedTemporaryFile(mode='w', delete=False)
-		with open(log_path, 'r') as csvfile, tempfile:
-			reader = csv.DictReader(csvfile, fieldnames=log_fieldnames)
-			writer = csv.DictWriter(tempfile, fieldnames=log_fieldnames, extrasaction='ignore')
-			found = False
-
-			for row in reader:
-				# Use this if you want to update existing rows instead of add new ones
-				if row['Sample'] == data['Sample'] and row['Qscore Threshold'] == data['Qscore Threshold']:
-					row.update(data)
-					found = True
-					
-				writer.writerow(row)
-			if not found:
-				writer.writerow(data)
-		shutil.move(tempfile.name, log_path)
+	return log_path
 
 def get_log_entry(sample, qscore):
 	log_path = os.path.join(outputs_dir, '..', 'output_log.csv')
