@@ -17,7 +17,7 @@ from pipeline.read_aligner import run_alignment
 from pipeline.plotting import make_genome_plots
 from pipeline.trans_dist_plot import make_trans_dist_plot
 from pipeline.plasmid_plot import plot_plasmid
-from pipeline.output_igv import create_igv_outputs
+from pipeline.output_bw import create_bw_outputs
 
 from parameters import read_files_dir, Qscore_threshold, info_file, delete_intermediates
 
@@ -59,6 +59,7 @@ def get_samples_to_process(isCloud):
 def main(isCloud=False):
 	today_string = datetime.datetime.now().strftime('%Y%m%d')
 	samples_to_process = get_samples_to_process(isCloud)
+	all_samples_logs = []
 	for sample_info in samples_to_process:
 		sample = sample_info['Sample']
 		experiment_date_string = None
@@ -114,7 +115,6 @@ def main(isCloud=False):
 		alignment_results = run_alignment(flanks_path, meta_info)
 		log_info.update(alignment_results)
 
-		update_log(log_info)
 
 		histogram_path = output_path(os.path.join('samples', f"{meta_info['output_date']}_{sample}_target_read_locations.csv"))
 		second_histogram_path = output_path(os.path.join('samples', f"{meta_info['output_date']}_{sample}_second_target_read_locations.csv"))
@@ -125,6 +125,7 @@ def main(isCloud=False):
 		
 		make_trans_dist_plot(histogram_path, run_information)
 		
+		all_samples_logs.append(log_info)
 		if delete_intermediates:
 			# delete intermediate files
 			shutil.rmtree(Path(inter_path('')).absolute())
@@ -133,7 +134,8 @@ def main(isCloud=False):
 				if Path(f'{file}.gz').exists():
 					os.remove(file)
 	
-	create_igv_outputs()
+	output_log_path = update_log(all_samples_logs)
+	create_bw_outputs(output_log_path)
 	if delete_intermediates:
 		intermediates_dir = os.path.join(Path(__file__).parent.absolute(), 'intermediates')
 		shutil.rmtree(intermediates_dir)

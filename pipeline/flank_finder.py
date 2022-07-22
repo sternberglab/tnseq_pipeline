@@ -61,4 +61,4 @@ def find_flanking_sequences(input_reads, flanks_path, meta_info):  # main comman
     
     elapsed = round(time.perf_counter() - start, 2)
     print("{} reads had a valid flanksing sequence (ran in {} seconds)".format(fp_reads, elapsed))
-    return {'Valid Flank Reads': fp_reads}
+    return {'Transposon end-containing reads': fp_reads}
