@@ -8,7 +8,7 @@ See an example in './inputs/experiment_info.csv', and descriptions
 of columns are in the README. 
 Paths can be either relative or absolute, but cannot contain spaces. 
 '''
-info_file = "./Jerrin_tnseq2.csv"
+info_file = "./JTG-E86_input.csv"
 
 '''
 Path to a folder containing the read files. Can be relative or absolute. 
@@ -31,7 +31,7 @@ Setting this to false will keep these files for debugging or looking
 deeper at some filtered reads. 
 Normally, these files are deleted to save space. 
 '''
-delete_intermediates = False
+delete_intermediates = True
 
 
 #### SENSITIVITY AND SYSTEM SETTINGS ####
