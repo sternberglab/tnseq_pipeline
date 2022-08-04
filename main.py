@@ -120,12 +120,12 @@ def main(isCloud=False):
 
 		histogram_path = output_path(os.path.join('samples', f"{meta_info['output_date']}_{sample}_target_read_locations.csv"))
 		second_histogram_path = output_path(os.path.join('samples', f"{meta_info['output_date']}_{sample}_second_target_read_locations.csv"))
-		run_information = make_genome_plots(histogram_path, meta_info)
+		if Path(histogram_path).exists():
+			run_information = make_genome_plots(histogram_path, meta_info)
+			make_trans_dist_plot(histogram_path, run_information)
 
 		if len(meta_info['Second target fasta file']) > 1:
 			run_information = plot_plasmid(second_histogram_path, meta_info)
-		
-		make_trans_dist_plot(histogram_path, run_information)
 		
 		all_samples_logs.append(log_info)
 		if delete_intermediates:

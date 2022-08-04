@@ -67,6 +67,10 @@ def make_trans_dist_plot(readsCsv, run_information):
             y_rl.append(0)
             y_lr.append(0)
     on_target_total = sum([int(row["reads"]) for row in reads_in_window])
+    
+    if on_target_total == 0:
+        print("No on target reads found, skipping transposition distance plot")
+        return
     off_target_reads = total - on_target_total
 
     max_y = max(max(y_rl), max(y_lr))

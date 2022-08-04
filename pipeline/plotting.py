@@ -28,16 +28,16 @@ plt.ioff()
 
 def get_bins(filename, genome_length, bin_size):
     csv = np.genfromtxt(filename, delimiter=",", skip_header=1)
+    if len(csv.shape) == 1:
+        csv = np.array([csv.tolist()])
     number_of_bins = (genome_length // bin_size) + 1
     bin_numbers = np.array(range(1, number_of_bins + 1))
     bin_values = []
     k = 0
     for i in bin_numbers:
-
         min_val = (i - 1) * bin_size
         max_val = i * bin_size
         bin_counts = 0
-
         while (k < len(csv) and csv[k][0] <= max_val):
             bin_counts += csv[k][1]
             k += 1

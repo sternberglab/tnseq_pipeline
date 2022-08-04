@@ -133,7 +133,7 @@ def create_bw_outputs(output_path):
 		os.makedirs(os.path.join(igv_dir, sample_id), exist_ok=True)
 		input_info = all_input_info[sample_id]
 		output_info = all_output_info.get(sample_id, None)
-		if not output_info:
+		if not output_info or int(output_info['Unique Target Mapping Reads']) == 0:
 			continue
 
 		chromosome = get_chromosome(input_info["Target fasta file"])

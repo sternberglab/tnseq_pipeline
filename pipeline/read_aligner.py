@@ -81,7 +81,7 @@ def run_alignment(flanks_path, meta_info):
         print("No target fasta provided in the info csv, skipping genome alignment")
 
     elapsed_time = round(time.perf_counter() - start, 2)
-    print("Target histogram data created ({} seconds)".format(elapsed_time))
+    print("Target data processed in ({} seconds)".format(elapsed_time))
     # Turn target_no_reads sam file to fasta format to run against the second target
     target_no_reads_fasta = inter_path("{}.fasta".format(Path(target_no_reads).stem))
     sam_to_fasta(target_no_reads, target_no_reads_fasta)
@@ -97,7 +97,7 @@ def run_alignment(flanks_path, meta_info):
             print("No second target fasta provided in the csv, skipping second target alignment")
     
         elapsed_time = round(time.perf_counter() - start, 2)
-        print("Second target histogram data created ({} seconds)".format(elapsed_time))
+        print("Second target data processed in ({} seconds)".format(elapsed_time))
 
     return hist_results
 
@@ -148,9 +148,8 @@ def correct_reads(matches_sam, output_name, meta_info):
     genome = SeqIO.read(Path(meta_info['Target fasta file']), "fasta")
     refseq = genome.seq.upper()
     rev_refseq = genome.seq.reverse_complement().upper()
-    spacer_is_fw_strand = refseq.find(meta_info['Spacer'].upper()) >= 0
-    #spacer_end_coord = int(meta_info['End of protospacer'])
     spacer_seq = meta_info['Spacer'].upper()
+    spacer_is_fw_strand = refseq.find(spacer_seq) >= 0
     if spacer_is_fw_strand:
         if refseq.find(spacer_seq) >= 0:
             spacer_end_coord = int(refseq.find(spacer_seq)) + len(spacer_seq)
@@ -230,28 +229,34 @@ def correct_output_reads(matches_sam, no_matches_sam, meta_info, output_name):
     donor_fp = meta_info['Donor sequence']
     spike_fp = meta_info['Spike in sequence']
 
-    histogram, unique_reads, non_unique_reads = correct_reads(matches_sam, output_name, meta_info)
+    try:
+        histogram, unique_reads, non_unique_reads = correct_reads(matches_sam, output_name, meta_info)
+
+        fasta_sequence = []
+        for i,j,k in zip(histogram.read_number,histogram.read_sequence,histogram.flag_sum):
+            if k !=0:
+                fasta_sequence.append(">%s"%(i) + "\n" + str(Seq(j).reverse_complement()))
+            else:
+                fasta_sequence.append(">%s"%(i) + "\n" + j)
+
+        fasta_file = "\n".join(fasta_sequence)
+        fasta_path = inter_path("{}_unique_reads.fasta".format(output_name))
+        with open(fasta_path, 'w', newline='') as file:
+            file.write(fasta_file)
+        unique_reads_seq_count = len(unique_reads.read_number.unique())
+        non_unique_reads_seq_count = len(non_unique_reads.read_number.unique())
+    except:
+        unique_reads_seq_count = 0
+        non_unique_reads_seq_count = 0
     
-    fasta_sequence = []
-    for i,j,k in zip(histogram.read_number,histogram.read_sequence,histogram.flag_sum):
-        if k !=0:
-            fasta_sequence.append(">%s"%(i) + "\n" + str(Seq(j).reverse_complement()))
-        else:
-            fasta_sequence.append(">%s"%(i) + "\n" + j)
-
-    fasta_file = "\n".join(fasta_sequence)
-    fasta_path = inter_path("{}_unique_reads.fasta".format(output_name))
-    with open(fasta_path, 'w', newline='') as file:
-        file.write(fasta_file)
-
     ## Check the flanking sequences without genome matches against donor, spike and CRISPR Sequence
     ##
     ## We check the sequences with no genome matches against these donor and spike first. 
     ## If it doesn't match either of them, we additionally check a
     ## sample-specific CRISPR Sequence Array,
     ## These read counts are added to the output logs for the run. 
-    no_match_sequences = pd.read_csv(no_matches_sam, sep="\t", usecols=[0,1,2,3,4,9,11,12,13,15,16,17], header=None)
-    col_names = "read_number, flag_sum, ref_genome, ref_genome_coordinate, mapq, read_sequence, AS, XN, XM, XG, NM, MD".split(", ")
+    no_match_sequences = pd.read_csv(no_matches_sam, sep="\t", usecols=[0,1,2,3,4,9], header=None)
+    col_names = "read_number, flag_sum, ref_genome, ref_genome_coordinate, mapq, read_sequence".split(", ")
     no_match_sequences.columns = col_names
 
     crispr_array_seq = meta_info.get('CRISPR Array Sequence', None)
@@ -270,8 +275,6 @@ def correct_output_reads(matches_sam, no_matches_sam, meta_info, output_name):
         elif crispr_array_seq and (read_seq in crispr_array_seq or read_seq in crispr_array_seq_rc):
             cripsr_seq_matches += 1
 
-    unique_reads_seq_count = len(unique_reads.read_number.unique())
-    non_unique_reads_seq_count = len(non_unique_reads.read_number.unique())
     output = {}
     if 'second' not in output_name:
         output = {
