@@ -209,8 +209,16 @@ def correct_reads(matches_sam, output_name, meta_info):
     RL_counts = histogram[histogram.orientation == 'RL'].corrected_coor.value_counts().sort_index()
     LR_counts = histogram[histogram.orientation == 'LR'].corrected_coor.value_counts().sort_index()
     totals = histogram.corrected_coor.value_counts().sort_index()
-    RL_counts.name = "RL"
-    LR_counts.name = "LR"
+
+    # This code generally assumes the right end of the transposon was given
+    # If the left end was given, flip the labels
+    is_left_end = meta_info.get('transposon_end_side', 'Right').lower() == 'left'
+    if is_left_end:
+        RL_counts.name = "LR"
+        LR_counts.name = "RL"
+    else:
+        RL_counts.name = "RL"
+        LR_counts.name = "LR"
     totals.name = 'reads'
 
     # Decrement to make the counts all the exact same as what Biopython sequence.seq.find() would give

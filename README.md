@@ -31,7 +31,8 @@ Run parameters with information on each sample are provided in a `.csv` file. An
 - `Sample`: Required. The identifier for a sample. It must match the start of the filename or the start of the folder containing the files in the `read_files_dir`, see examples above. This is how sample information is connected to read files. 
 - `Description`: Optional. Text describing the sample, it is added to generated charts. 
 - `read_type`: Required. How the reads were generated, must be either `restriction` or `fragment`. `restriction` signifies reads were generated via a MmeI restriction enzyme in the transposon end, while `fragment` signifies reads were generated in a random fragmentation process. 
-- `transposon_end_sequence`: Required. The sequence of the transposon end. 
+- `transposon_end_sequence`: Required. The sequence of the transposon end (assumed to be right end unless `transposon_end_side` is defined). 
+- `transposon_end_side`: Optional. The side of the transposon the end came from: assumed to be the right end unless this is set to `Left`
 - `Spacer`: Required. The spacer sequence used in the experiment. 
 - `Target fasta file`: Required. A path (either relative or absolute) to a fasta file containing the target molecule's (ex. a genome) sequence. Generates charts of integration sites. 
 - `Second target fasta file`: Optional. A path (either relative or absolute) to a fasta file containing a second target's (ex. a second chromosome, a plasmid, etc) sequence. Generates charts of integration sites. 
