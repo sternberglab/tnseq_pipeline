@@ -65,7 +65,7 @@ def setup_axes(axs, max_x, max_y, genome_length, bin_size):
     axs.yaxis.set_label_coords(-0.02, 0.5)
 
     # set up xticks
-    increments = [1000, 2000, 5000, 10000, 20000, 50000, 100000, 200000, 500000, 1000000, 2000000, 5000000, 10000000]
+    increments = [1000, 2000, 5000, 10000, 20000, 50000, 100000, 200000, 500000, 1000000, 2000000, 5000000, 10000000, 100000000, 1000000000, 10000000000]
     i = 0
     increment = increments[0]
     while genome_length // increment > 10:
