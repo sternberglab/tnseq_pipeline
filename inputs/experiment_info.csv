@@ -1,6 +1,6 @@
-﻿Sample,Description,read_type,flank_sequence,Spacer,Target fasta file,Second target fasta file,Donor sequence,Spike in sequence,CRISPR Array Sequence,Experiment date,End of protospacer
-A4632,Ppu,restriction,TGTTGGAACAACCAT,TGGGAGGATTCATAAAGCATTGTTTGTTGGCT,C:\Users\acree\Documents\sternbergLab\original_pipeline_example\genome.fasta,,,,,20200120,4446835
-A4651,Ppu,restriction,TGTTGGAACAACCAT,ttcgaaggctgcgcgcatttcttcctggctgc,/Users/Chris_Acree/Documents/lab/resources/genomes/fastas/genome_ppu.fasta,/Users/Chris_Acree/Documents/lab/resources/genomes/psl1145.fasta,TGCTGAAACCTCAGGCA,ATGATTACGCCAAGCTT,GCCGAGTAGGTAGCTGATAACGGATCCGAATTCGAGCGAAGGAGATATACATATGTTTTTGCAAAGACCTAAACCTTACA,20200120,4446835
-A4632,Ppu,restriction,TGTTGGAACAACCAT,TGGGAGGATTCATAAAGCATTGTTTGTTGGCT,C:\Users\acree\Documents\sternbergLab\original_pipeline_example\genome.fasta,,,,,20200120,4446835
-A955,,fragment,ATGGTTGCATCAACA,TGGGAGGATTCATAAAGCATTGTTTGTTGGCT,/Users/Chris_Acree/Documents/lab/resources/genomes/fastas/genome_bl21.fasta,,TGCTGAAACCTCAGGCA,	,GCCGAGTAGGTAGCTGATAACGGATCCGAATTCGAGCGAAGGAGATATACATATGTTTTTGCAAAGACCTAAACCTTACA,20200120,
-A956,,fragment,ATGGTTGTATCAACA,TGGGAGGATTCATAAAGCATTGTTTGTTGGCT,/Users/Chris_Acree/Documents/lab/resources/genomes/fastas/genome_bl21.fasta,,TGCTGAAACCTCAGGCA,,GCCGAGTAGGTAGCTGATAACGGATCCGAATTCGAGCGAAGGAGATATACATATGTTTTTGCAAAGACCTAAACCTTACA,20200120,
+﻿Sample,Description,read_type,transposon_end_sequence,transposon_end_side,Spacer,Target fasta file,Second target fasta file,Donor sequence,Spike in sequence,CRISPR Array Sequence,Experiment date,End of protospacer
+A4632,Ppu,restriction,TGTTGGAACAACCAT,,TGGGAGGATTCATAAAGCATTGTTTGTTGGCT,../genome.fasta,,,,,20200120,4446835
+A4651,Ppu,restriction,TGTTGGAACAACCAT,,ttcgaaggctgcgcgcatttcttcctggctgc,/Users/genomes/fastas/genome_ppu.fasta,/Users/me/Documents/genomes/psl1145.fasta,TGCTGAAACCTCAGGCA,ATGATTACGCCAAGCTT,GCCGAGTAGGTAGCTGATAACGGATCCGAATTCGAGCGAAGGAGATATACATATGTTTTTGCAAAGACCTAAACCTTACA,20200120,4446835
+A4632,Ppu,restriction,TGTTGGAACAACCAT,right,TGGGAGGATTCATAAAGCATTGTTTGTTGGCT,../original_pipeline_example/genome.fasta,,,,,20200120,4446835
+A955,,fragment,ATGGTTGCATCAACA,left,TGGGAGGATTCATAAAGCATTGTTTGTTGGCT,../genomes/fastas/genome_bl21.fasta,,TGCTGAAACCTCAGGCA,	,GCCGAGTAGGTAGCTGATAACGGATCCGAATTCGAGCGAAGGAGATATACATATGTTTTTGCAAAGACCTAAACCTTACA,20200120,
+A956,,fragment,ATGGTTGTATCAACA,,TGGGAGGATTCATAAAGCATTGTTTGTTGGCT,../genomes/fastas/genome_bl21.fasta,,TGCTGAAACCTCAGGCA,,GCCGAGTAGGTAGCTGATAACGGATCCGAATTCGAGCGAAGGAGATATACATATGTTTTTGCAAAGACCTAAACCTTACA,20200120,
