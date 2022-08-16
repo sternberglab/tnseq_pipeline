@@ -149,7 +149,7 @@ def correct_reads(matches_sam, output_name, meta_info):
     refseq = genome.seq.upper()
     rev_refseq = genome.seq.reverse_complement().upper()
     spacer_seq = meta_info['Spacer'].upper()
-    spacer_is_fw_strand = refseq.find(spacer_seq) >= 0
+    spacer_is_fw_strand = refseq.find(spacer_seq) >= 0 or rev_refseq.find(spacer_seq) == -1
     if spacer_is_fw_strand:
         if refseq.find(spacer_seq) >= 0:
             spacer_end_coord = int(refseq.find(spacer_seq)) + len(spacer_seq)
