@@ -47,6 +47,6 @@ Run parameters with information on each sample are provided in a `.csv` file. An
 
 The outputs are put in a created `outputs` folder. The `output_log.csv` contains information about each sample run, including read counts and percentages at each filtering step, for matches to donor, spike-ins, etc. The percentages are from reads passing the initial quality filter. The `Experiment date` is copied over from the info_file, if valid, while `Run date` is the date the code was run on. 
 
-In the `outputs/samples` directory, each sample has a CSV with the locations and orientations of all mapped reads. If a second target file file was provided, another CSV is generated with mappings to the second target. 
+In the `outputs/samples` directory, each sample has a CSV with the locations and orientations of all mapped reads. If a second target file file was provided, another CSV is generated with mappings to the second target. These locations are 0-indexed, so will be 1 less than locations as seen in Benchling or other viewers that start at 1. 
 
 A series of plots are generated for each sample in the `outputs/plots` directory, variations of genome-wide mappings with reads bucketed together, and zoomed in plots around the target region. 
