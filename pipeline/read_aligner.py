@@ -106,46 +106,56 @@ def sam_to_chunks(csv_file):
     return chunks
 
 
-def correct_read(genome_coord, read_is_fw_strand, spacer_is_fw_strand, corrected_coor, orientation, spacer_coord):
+def correct_read(genome_coord, read_is_fw_strand, spacer_is_fw_strand, corrected_coor, orientation, spacer_coord, default_orientation):
+    alt_orientation = 'LR' if default_orientation == 'RL' else 'RL'
     if read_is_fw_strand:
         # j=0 means the FP was matched on the forward strand
         # j=256 means still forward strand, was a secondary alignment
         # READ HERE: CODE THAT ASSIGNS RL/LR AND T'RL/T'LR AND GENOMIC COORDINATES
-        if not spacer_is_fw_strand:
-            if spacer_coord and spacer_coord > (
+        if not spacer_coord:
+            coord = genome_coord + map_length
+            read_orient = default_orientation
+        elif not spacer_is_fw_strand:
+            if spacer_coord > (
                     genome_coord + map_length - TSD):  # if T-LR and spacer on reverse strand, read on FW strand, need spacer coord to be greater than read coord
                 coord = genome_coord + map_length - TSD
             else:
                 coord = genome_coord + map_length
-            read_orient = 'LR'
+            read_orient = alt_orientation
         else:
-            if spacer_coord and spacer_coord < (genome_coord + map_length):
+            if spacer_coord < (genome_coord + map_length):
                 coord = genome_coord + map_length
             else:
                 coord = genome_coord + map_length - TSD
-            read_orient = 'RL'
+            read_orient = default_orientation
         corrected_coor.append(coord)
         orientation.append(read_orient)
-
+    
     # this means it was matched on the reverse complement
     else:
-        if not spacer_is_fw_strand:
+        if not spacer_coord:
+            coord = genome_coord
+            read_orient = default_orientation
+        elif not spacer_is_fw_strand:
             if spacer_coord and spacer_coord > genome_coord:
                 coord = genome_coord
             else:
                 coord = genome_coord + TSD
-            read_orient = 'RL'
+            read_orient = default_orientation
         else:
             if spacer_coord and spacer_coord < genome_coord:
                 coord = genome_coord + TSD
             else:
                 coord = genome_coord
-            read_orient = 'LR'
+            read_orient = alt_orientation
         corrected_coor.append(coord)
         orientation.append(read_orient)
 
 def correct_reads(matches_sam, output_name, meta_info):
-    genome = SeqIO.read(Path(meta_info['Target fasta file']), "fasta")
+    if 'second' not in output_name:
+        genome = SeqIO.read(Path(meta_info['Target fasta file']), "fasta")
+    else:
+        genome = SeqIO.read(Path(meta_info['Second target fasta file']), "fasta")
     refseq = genome.seq.upper()
     rev_refseq = genome.seq.reverse_complement().upper()
     spacer_seq = meta_info['Spacer'].upper()
@@ -188,9 +198,10 @@ def correct_reads(matches_sam, output_name, meta_info):
         non_unique_reads = pd.concat([non_unique_reads, chunk_non_unique_reads])
 
     #Get the corrected integration coordinate
-
     histogram = unique_reads[['read_number','flag_sum','ref_genome_coordinate','read_sequence']]
 
+    is_left_end = meta_info.get('transposon_end_side', 'Right').lower() == 'left'
+    default_orientation = 'LR' if is_left_end else 'RL'
     corrected_coor = []
     orientation = []
     n=0
@@ -202,23 +213,15 @@ def correct_reads(matches_sam, output_name, meta_info):
             # so their "actual" tn_end sequence read would be the opposite
             # strand of the detected one
             read_is_fw_strand = not read_is_fw_strand
-        correct_read(i, read_is_fw_strand, spacer_is_fw_strand, corrected_coor, orientation, spacer_end_coord)
-
+        correct_read(i, read_is_fw_strand, spacer_is_fw_strand, corrected_coor, orientation, spacer_end_coord, default_orientation):
     histogram = histogram.assign(corrected_coor=corrected_coor, orientation=orientation)
 
     RL_counts = histogram[histogram.orientation == 'RL'].corrected_coor.value_counts().sort_index()
     LR_counts = histogram[histogram.orientation == 'LR'].corrected_coor.value_counts().sort_index()
     totals = histogram.corrected_coor.value_counts().sort_index()
 
-    # This code generally assumes the right end of the transposon was given
-    # If the left end was given, flip the labels
-    is_left_end = meta_info.get('transposon_end_side', 'Right').lower() == 'left'
-    if is_left_end:
-        RL_counts.name = "LR"
-        LR_counts.name = "RL"
-    else:
-        RL_counts.name = "RL"
-        LR_counts.name = "LR"
+    RL_counts.name = "RL"
+    LR_counts.name = "LR"
     totals.name = 'reads'
 
     # Decrement to make the counts all the exact same as what Biopython sequence.seq.find() would give
