@@ -213,7 +213,7 @@ def correct_reads(matches_sam, output_name, meta_info):
             # so their "actual" tn_end sequence read would be the opposite
             # strand of the detected one
             read_is_fw_strand = not read_is_fw_strand
-        correct_read(i, read_is_fw_strand, spacer_is_fw_strand, corrected_coor, orientation, spacer_end_coord, default_orientation):
+        correct_read(i, read_is_fw_strand, spacer_is_fw_strand, corrected_coor, orientation, spacer_end_coord, default_orientation)
     histogram = histogram.assign(corrected_coor=corrected_coor, orientation=orientation)
 
     RL_counts = histogram[histogram.orientation == 'RL'].corrected_coor.value_counts().sort_index()
