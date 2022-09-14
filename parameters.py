@@ -8,11 +8,11 @@ See an example in './inputs/experiment_info.csv', and descriptions
 of columns are in the README. 
 Paths can be either relative or absolute, but cannot contain spaces. 
 '''
-info_file = "./JTG-E86_input.csv"
+info_file = "./experiment_info.csv"
 
 '''
 Path to a folder containing the read files. Can be relative or absolute. 
-Read files can be either zipped (.fastq.gz) or unzipped (.fastq)
+Read files can be either lzipped (.fastq.gz) or unzipped (.fastq)
 Either the containing folder or the filename must begin with
 the sample identifier. 
 Ex. When processing sample 'A234', the pipeline will find the following: 
@@ -66,3 +66,6 @@ low_reads_cap_percent = 0.50
 
 # On-target calculated window in the transposition distance histogram
 on_target_window = 200
+
+# Distance from the end of the protospacer to the target
+dist_to_target = 50

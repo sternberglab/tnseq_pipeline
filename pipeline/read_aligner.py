@@ -14,7 +14,7 @@ import platform
 import time
 
 from .utils import inter_path, output_path
-from parameters import transposon_end_flanking_sequence_length as map_length, target_site_duplication_length as TSD
+from parameters import transposon_end_flanking_sequence_length as map_length, target_site_duplication_length as TSD, on_target_window, dist_to_target
 
 def find_alignments(read_sequences_fasta, target_fasta, output_filename):
     print("Find alignments for {}".format(output_filename))
@@ -105,8 +105,29 @@ def sam_to_chunks(csv_file):
     chunks = pd.read_csv(csv_file,sep="\t",usecols=[0,1,2,3,4,9,11,12,13,15,16,17],header=None, chunksize=1000000)
     return chunks
 
+# Same as downstream of spacer for all off-targets
 
 def correct_read(genome_coord, read_is_fw_strand, spacer_is_fw_strand, corrected_coor, orientation, spacer_coord, default_orientation):
+    # For reads outside target window, use "downstream of spacer" logic
+    # First find the target site, and the end of the fingerprint with the lowest refseq
+    target_side = None
+    if spacer_coord:
+        if spacer_is_fw_strand:
+            target_site = spacer_coord + dist_to_target
+        else:
+            target_site = spacer_coord - dist_to_target
+    fp_end_coord = genome_coord + map_length if read_is_fw_strand else genome_coord
+
+    # See if the end of the fingerprint is in the target window (or the target wasn't found)
+    is_off_target = target_site is None or abs(fp_end_coord - target_site) > (on_target_window/2)
+    if is_off_target:
+        corrected_coor.append(fp_end_coord)
+        if read_is_fw_strand: 
+            orientation.append(default_orientation)
+        else:
+            orientation.append(alt_orientation)
+        return
+
     alt_orientation = 'LR' if default_orientation == 'RL' else 'RL'
     if read_is_fw_strand:
         # j=0 means the FP was matched on the forward strand
