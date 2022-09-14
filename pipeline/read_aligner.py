@@ -121,10 +121,11 @@ def correct_read(genome_coord, read_is_fw_strand, spacer_is_fw_strand, corrected
     # See if the end of the fingerprint is in the target window (or the target wasn't found)
     is_off_target = target_site is None or abs(fp_end_coord - target_site) > (on_target_window/2)
     if is_off_target:
-        corrected_coor.append(fp_end_coord)
         if read_is_fw_strand: 
+            corrected_coor.append(fp_end_coord)
             orientation.append(default_orientation)
         else:
+            corrected_coor.append(fp_end_coord + 5)
             orientation.append(alt_orientation)
         return
 
