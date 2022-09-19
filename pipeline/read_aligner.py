@@ -108,9 +108,10 @@ def sam_to_chunks(csv_file):
 # Same as downstream of spacer for all off-targets
 
 def correct_read(genome_coord, read_is_fw_strand, spacer_is_fw_strand, corrected_coor, orientation, spacer_coord, default_orientation):
+    alt_orientation = 'LR' if default_orientation == 'RL' else 'RL'
     # For reads outside target window, use "downstream of spacer" logic
     # First find the target site, and the end of the fingerprint with the lowest refseq
-    target_side = None
+    target_site = None
     if spacer_coord:
         if spacer_is_fw_strand:
             target_site = spacer_coord + dist_to_target
@@ -129,7 +130,6 @@ def correct_read(genome_coord, read_is_fw_strand, spacer_is_fw_strand, corrected
             orientation.append(alt_orientation)
         return
 
-    alt_orientation = 'LR' if default_orientation == 'RL' else 'RL'
     if read_is_fw_strand:
         # j=0 means the FP was matched on the forward strand
         # j=256 means still forward strand, was a secondary alignment
@@ -278,7 +278,9 @@ def correct_output_reads(matches_sam, no_matches_sam, meta_info, output_name):
             file.write(fasta_file)
         unique_reads_seq_count = len(unique_reads.read_number.unique())
         non_unique_reads_seq_count = len(non_unique_reads.read_number.unique())
-    except:
+    except Exception as e:
+        print("Error in correcting reads: ", e)
+        print("Setting 0 for reads count on this genome...")
         unique_reads_seq_count = 0
         non_unique_reads_seq_count = 0
     
@@ -288,9 +290,13 @@ def correct_output_reads(matches_sam, no_matches_sam, meta_info, output_name):
     ## If it doesn't match either of them, we additionally check a
     ## sample-specific CRISPR Sequence Array,
     ## These read counts are added to the output logs for the run. 
-    no_match_sequences = pd.read_csv(no_matches_sam, sep="\t", usecols=[0,1,2,3,4,9], header=None)
-    col_names = "read_number, flag_sum, ref_genome, ref_genome_coordinate, mapq, read_sequence".split(", ")
-    no_match_sequences.columns = col_names
+    no_match_sequences = None
+    try:
+        no_match_sequences = pd.read_csv(no_matches_sam, sep="\t", usecols=[0,1,2,3,4,9], header=None)
+        col_names = "read_number, flag_sum, ref_genome, ref_genome_coordinate, mapq, read_sequence".split(", ")
+        no_match_sequences.columns = col_names
+    except pd.errors.EmptyDataError as e:
+        pass
 
     crispr_array_seq = meta_info.get('CRISPR Array Sequence', None)
     crispr_array_seq_rc = None
@@ -300,13 +306,14 @@ def correct_output_reads(matches_sam, no_matches_sam, meta_info, output_name):
     donor_matches = 0
     spike_matches = 0
     cripsr_seq_matches = 0
-    for read_seq in no_match_sequences['read_sequence']:
-        if read_seq == donor_fp:
-            donor_matches += 1
-        elif read_seq == spike_fp:
-            spike_matches += 1
-        elif crispr_array_seq and (read_seq in crispr_array_seq or read_seq in crispr_array_seq_rc):
-            cripsr_seq_matches += 1
+    if no_match_sequences:
+        for read_seq in no_match_sequences['read_sequence']:
+            if read_seq == donor_fp:
+                donor_matches += 1
+            elif read_seq == spike_fp:
+                spike_matches += 1
+            elif crispr_array_seq and (read_seq in crispr_array_seq or read_seq in crispr_array_seq_rc):
+                cripsr_seq_matches += 1
 
     output = {}
     if 'second' not in output_name:

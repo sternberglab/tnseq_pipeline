@@ -95,7 +95,10 @@ def plot_binned(filepath, run_information, yAxis_type, isPlasmid=False):
         spacer_bins = [int(spacer_location / plasmid_bin_size) + 0.5 for spacer_location in spacer_locations]
 
     # get bins and counts for the histogram
-    b, a2 = get_bins(filepath, genome_length)
+    try:
+        b, a2 = get_bins(filepath, genome_length)
+    except FileNotFoundError as e:
+        return
 
     total_reads = int(sum(a2))
 
@@ -153,9 +156,12 @@ def plot_section(csvFile, meta_info, spacerSeq, name):
     spacerEnd = genome.seq.upper().find(spacerSeq) + len(spacerSeq)
 
     reads = []
-    with open(csvFile, encoding='utf-8-sig') as openFile:
-        reader = csv.DictReader(openFile)
-        reads = list(reader)
+    try:
+        with open(csvFile, encoding='utf-8-sig') as openFile:
+            reader = csv.DictReader(openFile)
+            reads = list(reader)
+    except FileNotFoundError as e:
+        return
     
     x_axis = list(range(40,61))
     y_vals = []
