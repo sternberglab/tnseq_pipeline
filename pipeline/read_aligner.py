@@ -306,7 +306,7 @@ def correct_output_reads(matches_sam, no_matches_sam, meta_info, output_name):
     donor_matches = 0
     spike_matches = 0
     cripsr_seq_matches = 0
-    if no_match_sequences:
+    if no_match_sequences is not None:
         for read_seq in no_match_sequences['read_sequence']:
             if read_seq == donor_fp:
                 donor_matches += 1
