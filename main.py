@@ -61,7 +61,9 @@ def main(isCloud=False):
 	samples_to_process = get_samples_to_process(isCloud)
 	all_samples_logs = []
 	for sample_info in samples_to_process:
-		sample = sample_info['Sample']
+		sample = sample_info['Sample'].strip()
+		if not len(sample):
+			continue
 		experiment_date_string = None
 		try:
 			experiment_date = datetime.datetime.strptime(sample_info.get("Experiment date"), '%Y%m%d')
